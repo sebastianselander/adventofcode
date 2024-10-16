@@ -1,0 +1,5 @@
+packages:
+    aoclude/aoclude.cabal
+    solutions/aoc21/aoc21.cabal
+    solutions/aoc22/aoc22.cabal
+    solutions/aoc23/aoc23.cabal

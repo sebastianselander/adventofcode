@@ -1,0 +1,24 @@
+cabal-version:   3.4
+name:            aoclude
+version:         0.1.0.0
+license:         MIT
+license-file:    LICENSE
+author:          sebastianselander
+maintainer:      sebastian.selander@gmail.com
+category:        Challenges
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+  ghc-options: -Wall
+
+library
+  import:           warnings
+  exposed-modules:  Parser
+  build-depends:
+    , base
+    , parsce
+    , template-haskell
+
+  hs-source-dirs:   src
+  default-language: GHC2024
