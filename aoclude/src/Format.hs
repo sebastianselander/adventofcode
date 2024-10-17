@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Parser where
+module Format where
 
 import Control.Arrow ((>>>))
 import Control.Monad (forM, void, (<=<))
@@ -38,10 +38,56 @@ data Format
     | Group !Format
     | Many !Format
     | Some !Format
+    | Discard !Format
     | Alternative !Format !Format
     | SepBy !Format !Format
     | Follows !Format !Format
     deriving (Show, Typeable, Data)
+
+-- | 
+-- %d - parse an integer, optionally prefixed by `+` or `-`
+-- %n - parse a newline
+-- %c - parse any lower-case, upper-case or 
+--      title-case unicode plus letters according to isAlpha
+-- %s - like char, but for strings
+-- %u - parse any unsigned integeger, not prefixed by +
+-- %y - parse one of `!@#$%^&*_+=|'\`
+-- !
+-- ?
+-- *
+-- +
+-- ~
+-- &
+-- For example in `data Foo = Foo_LT` it will then create a parse usable by `@Foo` that parses `<` and saves it as `Foo_LT`
+-- LT: <
+-- GT: >
+-- EQ: =
+-- BANG: !
+-- AT: @
+-- HASH: #
+-- DOLLAR: $
+-- PERCENT: %
+-- CARET: ^
+-- AMPERSAND: &
+-- STAR: *
+-- PIPE: |
+-- LPAREN: (
+-- RPAREN: )
+-- LBRACE: {
+-- RBRACE: }
+-- LBRACK: [
+-- RBRACK: ]
+-- COLON: :
+-- SEMI: ;
+-- QUESTION: ?
+-- SLASH: /
+-- BACKSLASH: \\
+-- UNDERSCORE: _
+-- DASH: -
+-- DOT: .
+-- COMMA: :
+-- PLUS: +
+-- TILDE: ~
 
 fmt :: QuasiQuoter
 fmt =
@@ -64,6 +110,7 @@ toType = \case
     String -> [t|String|]
     Char -> [t|Char|]
     Literal _ -> [t|()|]
+    Discard _ -> [t|()|]
     Optional format
         | interesting format -> [t|Maybe $(toType format)|]
         | otherwise -> [t|()|]
@@ -94,6 +141,7 @@ toParser = \case
     Unsigned -> [|unsigned|]
     Signed -> [|signed|]
     Char -> [|letter|]
+    Discard format -> [|$(toParser format) $> ()|]
     Optional format
         | interesting format -> [|option Nothing (Just <$> $(toParser format))|]
         | otherwise -> [|optional $(toParser format)|]
@@ -116,9 +164,9 @@ toParser = \case
             then [|sepBy $(toParser l) $(toParser r)|]
             else [|void (sepBy $(toParser l) $(toParser r))|]
     Alternative l r
-        | interesting l, interesting r -> [|Left <$> $le <|> Right <$> $re|]
-        | interesting l -> [|Just <$> $le <|> Nothing <$ $re|]
-        | interesting r -> [|Nothing <$ $le <|> Just <$> $re|]
+        | interesting l, interesting r -> [|Left <$> try $le <|> Right <$> $re|]
+        | interesting l -> [|Just <$> try $le <|> Nothing <$ $re|]
+        | interesting r -> [|Nothing <$ try $le <|> Just <$> $re|]
         | otherwise -> [|$le <|> $re|]
       where
         le = toParser l
@@ -151,6 +199,7 @@ interesting = \case
     At _ -> True
     String -> True
     Gather _ -> True
+    Discard _ -> False
     Optional format -> interesting format
     Group format -> interesting format
     Many format -> interesting format
@@ -179,7 +228,7 @@ unsigned = decimal <$> many1 (digitToInt <$> digit)
 signed :: Parser Int
 signed = do
     f <- option id (char '-' $> negate <|> char '+' $> id)
-    f . decimal <$> many1 (digitToInt <$> digit)
+    f <$> unsigned
 
 flatten :: Format -> [Format] -> [Format]
 flatten (Literal x) (Literal y : ys) = flatten (Literal (x ++ y)) ys
@@ -297,20 +346,22 @@ factor3 =
 atom :: Parser Format
 atom =
     choice
-        [ try $ Group <$> between (char '(') (char ')') factor1
-        , try $
-            foldl1 Alternative
-                <$> between
-                    (char '[')
-                    (char ']')
-                    (many1 (Literal <$> fmap (: []) (chars <|> char '\\' *> anyChar)))
-        , try $ string "%s" $> String
-        , try $ string "%d" $> Signed
-        , try $ string "%c" $> Char
-        , try $ string "%n" $> Newline
-        , try $ string "%u" $> Unsigned
-        , try $ string "%y" $> Symbol
-        , try $ string "@" *> (At <$> many1 letter)
+        [ Group <$> between (char '(') (char ')') factor1
+        , foldl1 Alternative
+            <$> between
+                (char '[')
+                (char ']')
+                (many1 (Literal <$> fmap (: []) (chars <|> char '\\' *> anyChar)))
+        , char '%'
+            *> choice
+                [ char 's' $> String
+                , char 'd' $> Signed
+                , char 'c' $> Char
+                , char 'n' $> Newline
+                , char 'u' $> Unsigned
+                , char 'y' $> Symbol
+                ]
+        , char '@' *> (At <$> many1 letter)
         , Literal <$> (char '\\' *> fmap (: []) anyChar)
         , Literal <$> many1 chars
         ]
@@ -328,6 +379,7 @@ table =
                         , char '?' $> Optional
                         , char '*' $> Many
                         , char '+' $> Some
+                        , char '~' $> Discard
                         ]
                     )
         ]
