@@ -9,7 +9,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         haskell-packages = nixpkgs.legacyPackages.${system}.haskell.packages;
-        ghcVersion = "910";
+        ghcVersion = "966";
         pkgs = import nixpkgs { inherit system; };
       in {
         packages = {
