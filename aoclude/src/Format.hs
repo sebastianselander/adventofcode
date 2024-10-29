@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -102,7 +104,7 @@ fmt =
         , quoteDec = const $ fail "Decs not supported"
         }
   where
-    makeParser p = [|parseErr ($(toParser p) <* eof)|]
+    makeParser p = [|let fmtparser = parseErr ($(toParser p) <* eof) in fmtparser|]
 
 toType :: Format -> TypeQ
 toType = \case
@@ -245,11 +247,14 @@ parseF s = case parseEither (factor1 <* eof) s of
     Left err -> fail (show err)
     Right r -> return r
 
-orderByLongest :: [(a, String)] -> [(a, String)]
+orderByLongest :: [(a, Either Format String)] -> [(a, Either Format String)]
 orderByLongest = sortBy (prefixOrder `on` snd)
   where
-    prefixOrder :: String -> String -> Ordering
-    prefixOrder l r
+    prefixOrder :: Either Format String -> Either Format String -> Ordering
+    prefixOrder (Left _) (Left _) = EQ
+    prefixOrder (Left _) (Right _) = GT
+    prefixOrder (Right _) (Left _) = LT
+    prefixOrder (Right l) (Right r)
         | l `isPrefixOf` r = GT
         | r `isPrefixOf` l = LT
         | otherwise = EQ
@@ -257,10 +262,15 @@ orderByLongest = sortBy (prefixOrder `on` snd)
 makeEnumParser :: String -> ExpQ
 makeEnumParser xs = do
     cases <- orderByLongest <$> go xs
-    let parsers = [[|$(conE name) <$ try (string str)|] | (name, str) <- cases]
+    let parsers =
+            [ case str of
+                Right str' -> [|$(conE name) <$ try (string str')|]
+                Left fmt' -> [|$(conE name) <$> try $(toParser fmt')|]
+            | (name, str) <- cases
+            ]
     [|choice $(listE parsers)|]
   where
-    go :: String -> Q [(Name, String)]
+    go :: String -> Q [(Name, Either Format String)]
     go str = do
         tyInfo <- lookupTypeName str
         tyName <- maybe (fail "Data type not found") return tyInfo
@@ -269,12 +279,12 @@ makeEnumParser xs = do
                 TyConI (DataD _ _ _ _ cons _) -> return cons
                 _ -> fail $ "Failed finding data type: " <> str
         forM cons $ \case
-            NormalC n _
+            NormalC n []
                 | Just name <- stripPrefix str (nameBase n) ->
                     case name of
                         '_' : symbolName -> do
                             sym <- processSymbolName symbolName
-                            return (n, sym)
+                            return (n, pure sym)
                         _ -> fail "Constructor name must be separated by '_'"
                 | otherwise ->
                     fail $
@@ -285,7 +295,57 @@ makeEnumParser xs = do
                             <> "_"
                             <> nameBase n
                             <> "'"
-            _ -> fail "Not an enum constructor"
+            NormalC n [(_, ty)]
+                | Just name <- stripPrefix str (nameBase n) ->
+                    case name of
+                        '_' : _ -> do
+                            fmt' <- tyToFormat ty
+                            return (n, Left fmt')
+                        _ -> fail "Constructor must be be separated by '_'"
+            con -> fail $ "Not an enum or one argument constructor: " <> show con
+
+tyToFormat :: Type -> Q Format
+tyToFormat ty = case ty of
+    ConT name -> case nameBase name of
+        "Nat" -> pure Unsigned
+        "Int" -> pure Signed
+        "String" -> pure String
+        "Char" -> pure Char
+        otherName -> fail $ "Type not supported: " <> otherName
+    Maybe x -> Optional <$> tyToFormat x
+    Either l r -> Alternative <$> tyToFormat l <*> tyToFormat r
+    Tuple l r -> do
+        l' <- tyToFormat l 
+        r' <- tyToFormat r
+        pure $ Follows (Follows l' (Many (Literal " "))) r'
+    List x -> Many <$> tyToFormat x
+    NonEmpty x -> Some <$> tyToFormat x
+    _ -> fail $ "tyToFormat not implemented for: " <> show ty
+
+pattern NonEmpty :: Type -> Type
+pattern NonEmpty x <- AppT (ConT (nameBase -> "NonEmpty")) x
+
+pattern List :: Type -> Type
+pattern List x <- AppT ListT x
+
+pattern Tuple :: Type -> Type -> Type
+pattern Tuple l r <- AppT (AppT (TupleT 2) l) r
+
+pattern Maybe :: Type -> Type
+pattern Maybe x <- AppT (ConT (nameBase -> "Maybe")) x
+
+pattern Either :: Type -> Type -> Type
+pattern Either l r <- AppT (AppT (ConT (nameBase -> "Either")) l) r
+
+
+-- Gather !Format
+-- Group !Format
+-- Many !Format
+-- Some !Format
+-- Discard !Format
+-- Alternative !Format !Format
+-- SepBy !Format !Format
+-- Follows !Format !Format
 
 processSymbolName :: String -> Q String
 processSymbolName str =
