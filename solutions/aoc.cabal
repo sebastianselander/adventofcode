@@ -1,0 +1,37 @@
+cabal-version:   3.0
+name:            aoc24
+version:         0.1.0.0
+
+-- synopsis:
+-- description:
+license:         MIT
+license-file:    LICENSE
+author:          sebastianselander
+maintainer:      sebastian.selander@gmail.com
+
+-- copyright:
+category:        Challenges
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+-- extra-source-files:
+
+common day
+  hs-source-dirs:   src
+  build-depends:
+    , aoclude
+    , base
+    , containers
+    , extra
+    , mtl
+    , search-algorithms
+    , unordered-containers
+    , vector
+    , matrix
+    , monad-memo
+
+  default-language: GHC2021
+
+executable 2024-01
+  import:  day
+  main-is: 2024/01.hs

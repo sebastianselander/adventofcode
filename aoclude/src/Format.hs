@@ -7,9 +7,10 @@ import Control.Arrow ((>>>))
 import Control.Monad (forM, void, (<=<))
 import Data.Char (digitToInt, isUpper)
 import Data.Data (Data, Typeable)
+import Data.Function (on)
 import Data.Functor (($>))
 import Data.Functor.Identity (Identity)
-import Data.List (foldl', stripPrefix)
+import Data.List (foldl', isPrefixOf, sortBy, stripPrefix)
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
 import Text.Parsec hiding (Empty)
@@ -44,51 +45,54 @@ data Format
     | Follows !Format !Format
     deriving (Show, Typeable, Data)
 
--- | 
--- %d - parse an integer, optionally prefixed by `+` or `-`
--- %n - parse a newline
--- %c - parse any lower-case, upper-case or 
---      title-case unicode plus letters according to isAlpha
--- %s - like char, but for strings
--- %u - parse any unsigned integeger, not prefixed by +
--- %y - parse one of `!@#$%^&*_+=|'\`
--- !
--- ?
--- *
--- +
--- ~
--- &
--- For example in `data Foo = Foo_LT` it will then create a parse usable by `@Foo` that parses `<` and saves it as `Foo_LT`
--- LT: <
--- GT: >
--- EQ: =
--- BANG: !
--- AT: @
--- HASH: #
--- DOLLAR: $
--- PERCENT: %
--- CARET: ^
--- AMPERSAND: &
--- STAR: *
--- PIPE: |
--- LPAREN: (
--- RPAREN: )
--- LBRACE: {
--- RBRACE: }
--- LBRACK: [
--- RBRACK: ]
--- COLON: :
--- SEMI: ;
--- QUESTION: ?
--- SLASH: /
--- BACKSLASH: \\
--- UNDERSCORE: _
--- DASH: -
--- DOT: .
--- COMMA: :
--- PLUS: +
--- TILDE: ~
-
+{- |
+%d - parse an integer, optionally prefixed by `+` or `-`
+%n - parse a newline
+%c - parse any lower-case, upper-case or
+     title-case unicode plus letters according to isAlpha
+%s - like char, but for strings
+%u - parse any unsigned integeger, not prefixed by +
+%y - parse one of `!@#$%^&*_+=|'\`
+<fmt>! - save the result of as a string <fmt>
+<fmt>? - zero or one
+<fmt>* - zero or many
+<fmt>+ - one or many
+<fmt>~ - discard the result
+<fmt1>|<fmt2> - <fmt1> or <fmt2>
+<fmt1>&<fmt2>- <fmt1> separated by <fmt1>
+For example in `data Foo = Foo_LT` it will then create a parse usable by `@Foo` that parses `<` and saves it as `Foo_LT`
+This only works for the following symbols.
+Parsing an arbitrary text can be done as follows: `Foo_bar`. This creates a parser that parses `bar` and returns the constructor `Foo_bar` in its place.
+LT: <
+GT: >
+EQ: =
+BANG: !
+AT: @
+HASH: #
+DOLLAR: $
+PERCENT: %
+CARET: ^
+AMPERSAND: &
+STAR: *
+PIPE: |
+LPAREN: (
+RPAREN: )
+LBRACE: {
+RBRACE: }
+LBRACK: [
+RBRACK: ]
+COLON: :
+SEMI: ;
+QUESTION: ?
+SLASH: /
+BACKSLASH: \\
+UNDERSCORE: _
+DASH: -
+DOT: .
+COMMA: :
+PLUS: +
+TILDE: ~
+-}
 fmt :: QuasiQuoter
 fmt =
     QuasiQuoter
@@ -241,10 +245,19 @@ parseF s = case parseEither (factor1 <* eof) s of
     Left err -> fail (show err)
     Right r -> return r
 
+orderByLongest :: [(a, String)] -> [(a, String)]
+orderByLongest = sortBy (prefixOrder `on` snd)
+  where
+    prefixOrder :: String -> String -> Ordering
+    prefixOrder l r
+        | l `isPrefixOf` r = GT
+        | r `isPrefixOf` l = LT
+        | otherwise = EQ
+
 makeEnumParser :: String -> ExpQ
 makeEnumParser xs = do
-    cases <- go xs
-    let parsers = [[|$(conE name) <$ string str|] | (name, str) <- cases]
+    cases <- orderByLongest <$> go xs
+    let parsers = [[|$(conE name) <$ try (string str)|] | (name, str) <- cases]
     [|choice $(listE parsers)|]
   where
     go :: String -> Q [(Name, String)]
@@ -262,8 +275,16 @@ makeEnumParser xs = do
                         '_' : symbolName -> do
                             sym <- processSymbolName symbolName
                             return (n, sym)
-                        _ -> return (n, name)
-                | otherwise -> return (n, nameBase n)
+                        _ -> fail "Constructor name must be separated by '_'"
+                | otherwise ->
+                    fail $
+                        "Constructor '"
+                            <> nameBase n
+                            <> "' must be prefixed by its type name as follows: '"
+                            <> nameBase tyName
+                            <> "_"
+                            <> nameBase n
+                            <> "'"
             _ -> fail "Not an enum constructor"
 
 processSymbolName :: String -> Q String
@@ -371,6 +392,9 @@ chars = noneOf "%()\\*+&|@!?[]"
 table :: Table Format
 table =
     [
+        [ Prefix $ foldr1 (>>>) <$> many1 (char '~' $> Discard)
+        ]
+    ,
         [ Postfix $
             foldr1 (>>>)
                 <$> many1
@@ -379,7 +403,6 @@ table =
                         , char '?' $> Optional
                         , char '*' $> Many
                         , char '+' $> Some
-                        , char '~' $> Discard
                         ]
                     )
         ]

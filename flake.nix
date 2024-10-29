@@ -19,10 +19,8 @@
         devShells = {
           default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
-              haskell.compiler.${"ghc${ghcVersion}"}
-              (haskell-language-server.override {
-                supportedGhcVersions = [ "${ghcVersion}" ];
-              })
+              ghc
+              haskell-language-server
               haskellPackages.cabal-install
               haskellPackages.fourmolu
               haskellPackages.ghcid

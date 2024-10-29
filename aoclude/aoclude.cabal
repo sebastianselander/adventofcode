@@ -14,7 +14,10 @@ common warnings
 
 library
   import:           warnings
-  exposed-modules:  Format
+  exposed-modules:
+    Example
+    Format
+
   build-depends:
     , base
     , parsec
