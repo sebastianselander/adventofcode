@@ -1,7 +1,7 @@
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Format where
 
@@ -315,11 +315,15 @@ tyToFormat ty = case ty of
     Maybe x -> Optional <$> tyToFormat x
     Either l r -> Alternative <$> tyToFormat l <*> tyToFormat r
     Tuple l r -> do
-        l' <- tyToFormat l 
+        l' <- tyToFormat l
         r' <- tyToFormat r
         pure $ Follows (Follows l' (Many (Literal " "))) r'
-    List x -> Many <$> tyToFormat x
-    NonEmpty x -> Some <$> tyToFormat x
+    List x -> do
+        x' <- tyToFormat x
+        pure $ Many (Follows x' (Many (Literal " ")))
+    NonEmpty x -> do
+        x' <- tyToFormat x
+        pure $ Some (Follows x' (Many (Literal " ")))
     _ -> fail $ "tyToFormat not implemented for: " <> show ty
 
 pattern NonEmpty :: Type -> Type
@@ -336,7 +340,6 @@ pattern Maybe x <- AppT (ConT (nameBase -> "Maybe")) x
 
 pattern Either :: Type -> Type -> Type
 pattern Either l r <- AppT (AppT (ConT (nameBase -> "Either")) l) r
-
 
 -- Gather !Format
 -- Group !Format
