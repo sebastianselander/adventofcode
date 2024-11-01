@@ -29,6 +29,7 @@ intro = return []
 data Format
     = Empty
     | Signed
+    | Digit
     | Unsigned
     | Char
     | Newline
@@ -113,6 +114,7 @@ toType = \case
     Unsigned -> [t|Int|]
     Symbol -> [t|Char|]
     Signed -> [t|Int|]
+    Digit -> [t|Int|]
     String -> [t|String|]
     Char -> [t|Char|]
     Literal _ -> [t|()|]
@@ -125,9 +127,24 @@ toType = \case
         | otherwise -> fail "toType: can't read type variables"
     Group format -> [t|$(toType format)|]
     Gather format -> [t|$(toType format)|]
-    Many format -> if interesting format then [t|[$(toType format)]|] else [t|()|]
-    Some format -> if interesting format then [t|[$(toType format)]|] else [t|()|]
-    SepBy format _sep -> if interesting format then [t|[$(toType format)]|] else [t|()|]
+    Many format ->
+        if interesting format
+            then do
+                ty <- [t|[$(toType format)]|]
+                if isCharTy ty then [t|String|] else pure ty
+            else [t|()|]
+    Some format ->
+        if interesting format
+            then do
+                ty <- [t|[$(toType format)]|]
+                if isCharTy ty then [t|String|] else pure ty
+            else [t|()|]
+    SepBy format _ ->
+        if interesting format
+            then do
+                ty <- [t|[$(toType format)]|]
+                if isCharTy ty then [t|String|] else pure ty
+            else [t|()|]
     Alternative l r
         | interesting l, interesting r -> [t|Either $(toType l) $(toType r)|]
         | interesting l -> [t|Maybe $lt|]
@@ -146,6 +163,7 @@ toParser = \case
     Symbol -> [|many1 symbol|]
     Unsigned -> [|unsigned|]
     Signed -> [|signed|]
+    Digit -> [|digitToInt <$> digit|]
     Char -> [|letter|]
     Discard format -> [|$(toParser format) $> ()|]
     Optional format
@@ -199,6 +217,7 @@ interesting = \case
     Literal{} -> False
     Newline -> False
     Signed -> True
+    Digit -> True
     Symbol -> True
     Unsigned -> True
     Char -> True
@@ -341,6 +360,10 @@ pattern Maybe x <- AppT (ConT (nameBase -> "Maybe")) x
 pattern Either :: Type -> Type -> Type
 pattern Either l r <- AppT (AppT (ConT (nameBase -> "Either")) l) r
 
+isCharTy :: Type -> Bool
+isCharTy (ConT (nameBase -> "Char")) = True
+isCharTy _ = False
+
 -- Gather !Format
 -- Group !Format
 -- Many !Format
@@ -441,6 +464,7 @@ atom =
                 [ char 's' $> String
                 , char 'd' $> Signed
                 , char 'c' $> Char
+                , char 'i' $> Digit
                 , char 'n' $> Newline
                 , char 'u' $> Unsigned
                 , char 'y' $> Symbol
