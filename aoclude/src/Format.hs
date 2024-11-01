@@ -49,20 +49,21 @@ data Format
     deriving (Show, Typeable, Data)
 
 {- |
-%d - parse an integer, optionally prefixed by `+` or `-`
+%i - parse an integer, optionally prefixed by `+` or `-`
+%u - parse any unsigned integeger, not prefixed by +
+%d - parse any single digit
 %n - parse a newline
 %c - parse any lower-case, upper-case or
      title-case unicode plus letters according to isAlpha
 %s - like char, but for strings
-%u - parse any unsigned integeger, not prefixed by +
 %y - parse one of `!@#$%^&*_+=|'\`
 <fmt>! - save the result of as a string <fmt>
 <fmt>? - zero or one
 <fmt>* - zero or many
 <fmt>+ - one or many
-<fmt>~ - discard the result
+~<fmt> - discard the result
 <fmt1>|<fmt2> - <fmt1> or <fmt2>
-<fmt1>&<fmt2>- <fmt1> separated by <fmt1>
+<fmt1>&<fmt2>- zero or more <fmt1> separated by <fmt1>
 For example in `data Foo = Foo_LT` it will then create a parse usable by `@Foo` that parses `<` and saves it as `Foo_LT`
 This only works for the following symbols.
 Parsing an arbitrary text can be done as follows: `Foo_bar`. This creates a parser that parses `bar` and returns the constructor `Foo_bar` in its place.
@@ -462,9 +463,9 @@ atom =
         , char '%'
             *> choice
                 [ char 's' $> String
-                , char 'd' $> Signed
+                , char 'i' $> Signed
                 , char 'c' $> Char
-                , char 'i' $> Digit
+                , char 'd' $> Digit
                 , char 'n' $> Newline
                 , char 'u' $> Unsigned
                 , char 'y' $> Symbol
