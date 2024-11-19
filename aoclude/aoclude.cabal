@@ -15,13 +15,28 @@ common warnings
 library
   import:           warnings
   exposed-modules:
-    Example.Day_23_02
-    Format
+    Advent.Box
+    Advent.Chinese
+    Advent.Coord
+    Advent.Coord3
+    Advent.Format
+    Advent.Group
+    Advent.Permutation
+    Advent.PQueue
+    Advent.Queue
+    Advent.Prelude
+    Advent.Nat
+    Advent.ReadS
+    Advent.Graph
 
   build-depends:
     , base
+    , containers
     , parsec
     , template-haskell
+    , vector
+    , extra
+    , search-algorithms
 
   hs-source-dirs:   src
   default-language: GHC2021

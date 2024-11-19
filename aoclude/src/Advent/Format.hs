@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Format where
+module Advent.Format where
 
 import Control.Arrow ((>>>))
 import Control.Monad (forM, void, (<=<))
