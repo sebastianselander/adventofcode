@@ -50,12 +50,11 @@ augmentingPath src target network =
     next node = sink <$> filter ((> 0) . flow) (lookup node network)
 
     path :: (Ord a) => [a] -> [Edge a]
-    path [] = []
-    path [_] = []
     path (y : x : xs) = case lookup y network of
         edges -> case [e | e <- edges, e.sink == x] of
             (first : _) -> first : path (x : xs)
             [] -> []
+    path _ = []
 
 updateEdges :: (Show a, Eq a) => Int -> [Edge a] -> Network a -> Network a
 updateEdges n edges (Network network) =
