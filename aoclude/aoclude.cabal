@@ -27,7 +27,7 @@ library
     Advent.Prelude
     Advent.Nat
     Advent.ReadS
-    Advent.Graph
+    Advent.Flow
 
   build-depends:
     , base
