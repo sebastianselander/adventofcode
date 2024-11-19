@@ -7,12 +7,10 @@ import Advent.Prelude (elemOn)
 import Algorithm.Search
 import Prelude hiding (lookup)
 
-data Network a = Network
-    { edges :: [Edge a]
-    , networkSource :: a
-    , networkSink :: a
+newtype Network a = Network
+    { unNetwork :: [Edge a]
     }
-    deriving (Show, Eq, Functor, Traversable, Foldable)
+    deriving (Show, Eq, Functor, Semigroup, Monoid, Traversable, Foldable)
 
 data EdgeType = Forward | Backward
     deriving (Show, Eq)
@@ -24,20 +22,20 @@ data Edge a = Edge
     }
     deriving (Show, Eq, Functor, Traversable, Foldable)
 
-mkNetwork :: (Ord a) => a -> a -> [(a, a, Int)] -> Network a
-mkNetwork src target = foldr f (Network [] src target)
+fromList :: (Ord a) => [(a, a, Int)] -> Network a
+fromList = foldr f mempty
   where
-    f (a, b, c) = insert a (b, c)
+    f (a, b, c) = insert a b c
 
 lookup :: (Eq a) => a -> Network a -> [Edge a]
-lookup a network = filter ((== a) . source) network.edges
+lookup a (Network g) = filter ((== a) . source) g
 
-insert :: (Ord vertex) => vertex -> (vertex, Int) -> Network vertex -> Network vertex
-insert from (to, cost) network@(Network g src target)
-    | elemOn sink from edges = network
-    | otherwise = Network (Edge from to cost : Edge to from 0 : g) src target
+insert :: (Eq a) => a -> a -> Int -> Network a -> Network a
+insert from to cost (Network g)
+    | elemOn sink from edges = Network g
+    | otherwise = Network $ Edge from to cost : Edge to from 0 : g
   where
-    edges = lookup to network
+    edges = lookup to (Network g)
 
 -- | Precondition: non-empty
 bottleneck :: [Edge a] -> Int
@@ -60,7 +58,7 @@ augmentingPath src target network =
             [] -> []
 
 updateEdges :: (Show a, Eq a) => Int -> [Edge a] -> Network a -> Network a
-updateEdges n edges (Network network src target) =
+updateEdges n edges (Network network) =
     Network
         [ if
             | (from, to) `elem` vertexPairs -> Edge from to (flow - n)
@@ -68,28 +66,26 @@ updateEdges n edges (Network network src target) =
             | otherwise -> Edge from to flow
         | Edge from to flow <- network
         ]
-        src
-        target
   where
     vertexPairs = fmap (\e -> (e.source, e.sink)) edges
 
-edmondsKarp :: (Show a, Ord a) => Network a -> Network a
-edmondsKarp network = case augmentingPath network.networkSource network.networkSink network of
+edmondsKarp :: (Show a, Ord a) => a -> a -> Network a -> Network a
+edmondsKarp source sink network = case augmentingPath source sink network of
     Nothing -> network
     Just edges ->
-        let residual = updateEdges (bottleneck edges) edges network
-         in edmondsKarp residual
+        let availableFlow = bottleneck edges
+            residual = updateEdges availableFlow edges network
+         in edmondsKarp source sink residual
 
-maxFlow :: (Eq a) => Network a -> Int
-maxFlow (Network g _ sink) = sum [flow | Edge from _ flow <- g, from == sink]
+maxFlow :: (Eq a) => a -> Network a -> Int
+maxFlow sink (Network g) = sum [flow | Edge from _ flow <- g, from == sink]
 
 -- flow: 30
--- Algorithm Design - Kleinberg and Tardos
+-- source: 's'
+-- sink: 't'
 example1 :: Network Char
 example1 =
-    mkNetwork
-        's'
-        't'
+    fromList
         [ ('u', 't', 10)
         , ('v', 't', 20)
         , ('u', 'v', 30)
@@ -98,12 +94,11 @@ example1 =
         ]
 
 -- flow: 6
--- https://www.youtube.com/watch?v=VbeTl1gG4l4
+-- source: 'a'
+-- sink: 'f'
 example2 :: Network Char
 example2 =
-    mkNetwork
-        'a'
-        'f'
+    fromList
         [ ('a', 'b', 2)
         , ('a', 'c', 8)
         , ('b', 'c', 2)
@@ -116,12 +111,11 @@ example2 =
         ]
 
 -- flow: 5
--- Wikipedia: Edmonds-Karp
+-- source: 'a' 
+-- sink: 'g'
 example3 :: Network Char
 example3 =
-    mkNetwork
-        'a'
-        'g'
+    fromList
         [ ('a', 'b', 3)
         , ('a', 'd', 3)
         , ('b', 'c', 4)
@@ -137,12 +131,11 @@ example3 =
         ]
 
 -- flow: 37
--- https://www.youtube.com/watch?v=rjwwU8dNXug
+-- source: 'a'
+-- sink: 'd'
 example4 :: Network Char
 example4 =
-    mkNetwork
-        'a'
-        'd'
+    fromList
         [ ('a', 'b', 20)
         , ('a', 'g', 9)
         , ('a', 'f', 11)
