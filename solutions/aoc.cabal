@@ -16,6 +16,9 @@ extra-doc-files: CHANGELOG.md
 
 -- extra-source-files:
 
+common extensions
+  default-language:  GHC2021
+  default-extensions: QuasiQuotes
 common day
   hs-source-dirs:   src
   build-depends:
@@ -23,15 +26,15 @@ common day
     , base
     , containers
     , extra
+    , matrix
+    , monad-memo
     , mtl
     , search-algorithms
     , unordered-containers
     , vector
-    , matrix
-    , monad-memo
 
   default-language: GHC2021
 
 executable 2024-01
-  import:  day
+  import:  day, extensions
   main-is: 2024/01.hs
