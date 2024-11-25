@@ -225,14 +225,14 @@ toType = \case
 
 toParser :: Format -> ExpQ
 toParser = \case
-    Empty -> [|return ()|]
-    Newline -> [|void newline|]
-    String -> [|many1 letter|]
-    Symbol -> [|many1 symbol|]
-    Unsigned -> [|unsigned|]
-    Signed -> [|signed|]
-    Digit -> [|digitToInt <$> digit|]
-    Char -> [|letter|]
+    Empty -> [|return () <|> "<empty>"|]
+    Newline -> [|void newline <?> "newline"|]
+    String -> [|many1 letter <?> "<letters>"|]
+    Symbol -> [|many1 symbol <?> "<symbol>"|]
+    Unsigned -> [|unsigned <?> "unsigned"|]
+    Signed -> [|signed <?> "signed"|]
+    Digit -> [|digitToInt <$> digit <?> "digit"|]
+    Char -> [|letter <?> "<single letter>"|]
     Discard format -> [|$(toParser format) $> ()|]
     Optional format
         | interesting format -> [|option Nothing (Just <$> $(toParser format))|]
