@@ -22,20 +22,31 @@ data Edge a = Edge
     }
     deriving (Show, Eq, Functor, Traversable, Foldable)
 
-fromList :: (Ord a) => [(a, a, Int)] -> Network a
-fromList = foldr f mempty
+size :: Network a -> Int
+size (Network g) = length [undefined | Edge _ _ n <- g, n /= 0]
+
+edgeLabels :: Edge a -> (a, a)
+edgeLabels (Edge a b _) = (a, b)
+
+fromList :: forall a. (Eq a, Ord a) => [(a, a, Int)] -> Network a
+fromList = addBackwards . foldr f mempty
   where
     f (a, b, c) = insert a b c
+    addBackwards :: Network a -> Network a
+    addBackwards (Network graph) =
+        Network $
+            concat
+                [ if elemOn edgeLabels (to, from) graph
+                    then [edge]
+                    else [edge, Edge to from 0]
+                | edge@(Edge from to _) <- graph
+                ]
 
 lookup :: (Eq a) => a -> Network a -> [Edge a]
 lookup a (Network g) = filter ((== a) . source) g
 
 insert :: (Eq a) => a -> a -> Int -> Network a -> Network a
-insert from to cost (Network g)
-    | elemOn sink from edges = Network g
-    | otherwise = Network $ Edge from to cost : Edge to from 0 : g
-  where
-    edges = lookup to (Network g)
+insert from to cost (Network g) = Network $ Edge from to cost : g
 
 -- | Precondition: non-empty
 bottleneck :: [Edge a] -> Int
@@ -110,7 +121,7 @@ example2 =
         ]
 
 -- flow: 5
--- source: 'a' 
+-- source: 'a'
 -- sink: 'g'
 example3 :: Network Char
 example3 =
