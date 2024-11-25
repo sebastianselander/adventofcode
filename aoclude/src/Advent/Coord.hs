@@ -7,6 +7,7 @@ import Data.Foldable (toList)
 import Data.Map (Map, findWithDefault, keys)
 import GHC.Generics
 
+-- | (Row, Column)
 data Coord = C !Int !Int
     deriving (Read, Ord, Eq, Generic, Data)
 
@@ -61,7 +62,7 @@ manhattan c1 c2 = norm1 (c1 - c2)
 euclidean :: Coord -> Coord -> Double
 euclidean c1 c2 = pyth (c1 - c2)
   where
-    pyth (C l r) = sqrt (fromIntegral (l*l + r*r))
+    pyth (C l r) = sqrt (fromIntegral (l * l + r * r))
 
 origin :: Coord
 origin = C 0 0
@@ -95,6 +96,13 @@ cardinalOn f !c = [coord | coord <- [above c, left c, below c, right c], f coord
 
 neighbors :: Coord -> [Coord]
 neighbors = neighborsOn (const True)
+
+contains :: (Coord, Coord) -> Coord -> Bool
+contains (topLeft, bottomRight) coord =
+    coordCol topLeft <= coordCol coord
+        && coordRow topLeft <= coordRow coord
+        && coordCol bottomRight >= coordCol coord
+        && coordRow bottomRight >= coordRow coord
 
 neighborsOn :: (Coord -> Bool) -> Coord -> [Coord]
 neighborsOn f !c =
