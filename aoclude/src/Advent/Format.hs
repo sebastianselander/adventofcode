@@ -2,11 +2,12 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 
 module Advent.Format where
 
 import Control.Arrow ((>>>))
-import Control.Monad (forM, void, (<=<))
+import Control.Monad (forM, replicateM, void, (<=<))
 import Data.Char (digitToInt, isUpper)
 import Data.Data (Data, Typeable)
 import Data.Function (on)
@@ -22,6 +23,7 @@ import Text.Parsec.Expr (
     OperatorTable,
     buildExpressionParser,
  )
+import Text.Printf (printf)
 
 intro :: Q [Dec]
 intro = return []
@@ -47,6 +49,71 @@ data Format
     | SepBy !Format !Format
     | Follows !Format !Format
     deriving (Show, Typeable, Data)
+
+getRawInput :: Int -> Int -> IO String
+getRawInput year day = readFile (printf "inputs/%d/%02d.txt" year day)
+
+{- |
+%i - parse an integer, optionally prefixed by `+` or `-`
+%u - parse any unsigned integeger, not prefixed by +
+%d - parse any single digit
+%n - parse a newline
+%c - parse any lower-case, upper-case or
+     title-case unicode plus letters according to isAlpha
+%s - like char, but for strings
+%y - parse one of `!@#$%^&*_+=|'\`
+<fmt>! - save the result of as a string <fmt>
+<fmt>? - zero or one
+<fmt>* - zero or many
+<fmt>+ - one or many
+~<fmt> - discard the result
+<fmt1>|<fmt2> - <fmt1> or <fmt2>
+<fmt1>&<fmt2>- zero or more <fmt1> separated by <fmt1>
+For example in `data Foo = Foo_LT` it will then create a parse usable by `@Foo` that parses `<` and saves it as `Foo_LT`
+This only works for the following symbols.
+Parsing an arbitrary text can be done as follows: `Foo_bar`. This creates a parser that parses `bar` and returns the constructor `Foo_bar` in its place.
+LT: <
+GT: >
+EQ: =
+BANG: !
+AT: @
+HASH: #
+DOLLAR: $
+PERCENT: %
+CARET: ^
+AMPERSAND: &
+STAR: *
+PIPE: |
+LPAREN: (
+RPAREN: )
+LBRACE: {
+RBRACE: }
+LBRACK: [
+RBRACK: ]
+COLON: :
+SEMI: ;
+QUESTION: ?
+SLASH: /
+BACKSLASH: \\
+UNDERSCORE: _
+DASH: -
+DOT: .
+COMMA: :
+PLUS: +
+TILDE: ~
+-}
+format :: QuasiQuoter
+format =
+    QuasiQuoter
+        { quoteExp = makeParser <=< parseFormat
+        , quoteType = toType <=< (fmap (\ (_, _, p) -> p) . parseFormat)
+        , quotePat = const $ fail "Patterns not supported"
+        , quoteDec = const $ fail "Decs not supported"
+        }
+  where
+    makeParser (year, day, p) = 
+        [|let fmtparser = parseErr ($(toParser p) <* eof) 
+           in fmtparser <$> getRawInput year day|]
 
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`
@@ -100,8 +167,8 @@ TILDE: ~
 fmt :: QuasiQuoter
 fmt =
     QuasiQuoter
-        { quoteExp = makeParser <=< parseF
-        , quoteType = toType <=< parseF
+        { quoteExp = makeParser <=< parseFmt
+        , quoteType = toType <=< parseFmt
         , quotePat = const $ fail "Patterns not supported"
         , quoteDec = const $ fail "Decs not supported"
         }
@@ -262,8 +329,19 @@ flatten Empty xs = xs
 flatten (Follows l r) xs = flatten l (flatten r xs)
 flatten x ys = x : ys
 
-parseF :: String -> Q Format
-parseF s = case parseEither (factor1 <* eof) s of
+parseFormat :: String -> Q (Int, Int, Format)
+parseFormat s = case parseEither ((,,) <$> year <*> day <*> factor1 <* eof) s of
+    Left err -> fail (show err)
+    Right r -> return r
+  where
+    year = decimal <$> replicateM 4 (digitToInt <$> digit) <* (char ' ' <?> "exactly one space")
+    day = f <$> digit <*> optionMaybe digit <* (char ' ' <?> "exactly one space")
+      where
+        f x Nothing = digitToInt x
+        f x (Just y) = 10 * digitToInt x + digitToInt y
+
+parseFmt :: String -> Q Format
+parseFmt s = case parseEither (factor1 <* eof) s of
     Left err -> fail (show err)
     Right r -> return r
 
