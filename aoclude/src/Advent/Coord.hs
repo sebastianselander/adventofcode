@@ -1,11 +1,19 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE UnboxedTuples #-}
 
 module Advent.Coord where
 
+import Control.Monad.ST (ST, runST, stToIO)
+import Data.Array.Base qualified as AB
+import Data.Array.IO.Internals qualified as AB
 import Data.Data
 import Data.Foldable (toList)
 import Data.Map (Map, findWithDefault, keys)
-import GHC.Generics
+import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), (+#))
+import GHC.Generics (Generic)
+import GHC.Ix (Ix (..), indexError)
+import GHC.ST (ST (ST))
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -164,3 +172,84 @@ instance Num Coord where
 
 instance Show Coord where
     show (C row col) = "(" ++ show row ++ ", " ++ show col ++ ")"
+
+instance Ix Coord where
+    unsafeIndex (C lorow locol, C hirow hicol) (C row col) =
+        unsafeIndex (lorow, hirow) row * unsafeRangeSize (locol, hicol) + unsafeIndex (locol, hicol) col
+    {-# INLINE unsafeIndex #-}
+
+    index b i
+        | inRange b i = unsafeIndex b i
+        | otherwise = indexError b i "Coord"
+    {-# INLINE index #-}
+
+    inRange (C lorow locol, C hirow hicol) (C row col) =
+        inRange (lorow, hirow) row && inRange (locol, hicol) col
+    {-# INLINE inRange #-}
+
+    range (C lorow locol, C hirow hicol) =
+        [C row col | row <- [lorow .. hirow], col <- [locol .. hicol]]
+    {-# INLINE range #-}
+
+    unsafeRangeSize (C lorow locol, C hirow hicol) =
+        (hirow - lorow + 1) * (hicol - locol + 1)
+    {-# INLINE unsafeRangeSize #-}
+
+instance AB.IArray AB.UArray Coord where
+    {-# INLINE bounds #-}
+    bounds (AB.UArray l u _ _) = (l, u)
+    {-# INLINE numElements #-}
+    numElements (AB.UArray _ _ n _) = n
+    {-# INLINE unsafeArray #-}
+    unsafeArray lu ies = runST (AB.unsafeArrayUArray lu ies 0)
+    {-# INLINE unsafeAt #-}
+    unsafeAt (AB.UArray _ _ _ arr#) (I# i#) =
+        C
+            (I# (indexIntArray# arr# (2# *# i#)))
+            (I# (indexIntArray# arr# (2# *# i# +# 1#)))
+    {-# INLINE unsafeReplace #-}
+    unsafeReplace arr ies = runST (AB.unsafeReplaceUArray arr ies)
+    {-# INLINE unsafeAccum #-}
+    unsafeAccum f arr ies = runST (AB.unsafeAccumUArray f arr ies)
+    {-# INLINE unsafeAccumArray #-}
+    unsafeAccumArray f initialValue lu ies = runST (AB.unsafeAccumArrayUArray f initialValue lu ies)
+
+instance AB.MArray (AB.STUArray s) Coord (ST s) where
+    {-# INLINE getBounds #-}
+    getBounds (AB.STUArray l u _ _) = return (l, u)
+    {-# INLINE getNumElements #-}
+    getNumElements (AB.STUArray _ _ n _) = return n
+    {-# INLINE unsafeNewArray_ #-}
+    unsafeNewArray_ (l, u) = AB.unsafeNewArraySTUArray_ (l, u) (\x -> 2# *# AB.wORD_SCALE x)
+    {-# INLINE newArray_ #-}
+    newArray_ arrBounds = AB.newArray arrBounds 0
+    {-# INLINE unsafeRead #-}
+    unsafeRead (AB.STUArray _ _ _ marr#) (I# i#) = ST $ \s1# ->
+        case readIntArray# marr# (2# *# i#) s1# of
+            (# s2#, y# #) ->
+                case readIntArray# marr# (2# *# i# +# 1#) s2# of
+                    (# s3#, x# #) ->
+                        (# s3#, C (I# y#) (I# x#) #)
+    {-# INLINE unsafeWrite #-}
+    unsafeWrite (AB.STUArray _ _ _ marr#) (I# i#) (C (I# y#) (I# x#)) = ST $ \s1# ->
+        case writeIntArray# marr# (2# *# i#) y# s1# of
+            s2# ->
+                case writeIntArray# marr# (2# *# i# +# 1#) x# s2# of
+                    s3# ->
+                        (# s3#, () #)
+
+instance AB.MArray AB.IOUArray Coord IO where
+    {-# INLINE getBounds #-}
+    getBounds (AB.IOUArray arr) = stToIO (AB.getBounds arr)
+    {-# INLINE getNumElements #-}
+    getNumElements (AB.IOUArray arr) = stToIO (AB.getNumElements arr)
+    {-# INLINE newArray #-}
+    newArray lu initialValue = stToIO (AB.IOUArray <$> AB.newArray lu initialValue)
+    {-# INLINE unsafeNewArray_ #-}
+    unsafeNewArray_ lu = stToIO (AB.IOUArray <$> AB.unsafeNewArray_ lu)
+    {-# INLINE newArray_ #-}
+    newArray_ = AB.unsafeNewArray_
+    {-# INLINE unsafeRead #-}
+    unsafeRead (AB.IOUArray marr) i = stToIO (AB.unsafeRead marr i)
+    {-# INLINE unsafeWrite #-}
+    unsafeWrite (AB.IOUArray marr) i e = stToIO (AB.unsafeWrite marr i e)

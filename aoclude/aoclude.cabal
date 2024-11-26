@@ -37,6 +37,7 @@ library
     , vector
     , extra
     , search-algorithms
+    , array
 
   hs-source-dirs:   src
   default-language: GHC2021
