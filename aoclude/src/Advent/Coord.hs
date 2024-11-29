@@ -14,6 +14,7 @@ import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), 
 import GHC.Generics (Generic)
 import GHC.Ix (Ix (..), indexError)
 import GHC.ST (ST (ST))
+import Data.Array
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -89,6 +90,10 @@ west = C 0 (-1)
 
 scale :: Int -> Coord -> Coord
 scale n = mapCoord (n *)
+
+-- | Precondition: Non-empty
+coordMatrix :: [[a]] -> Array Coord a
+coordMatrix xs = array (C 0 0, C (length xs) (length (head xs))) $ coordLines xs
 
 {- | Given a list of lines pair up each character with
 its position.
