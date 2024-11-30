@@ -4,7 +4,7 @@
 module Advent.Flow where
 
 import Advent.Prelude (elemOn)
-import Algorithm.Search
+import Algorithm.Search (bfs)
 import Prelude hiding (lookup)
 
 newtype Network a = Network

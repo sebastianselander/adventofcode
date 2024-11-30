@@ -13,10 +13,54 @@ import Data.Data (Data, Typeable)
 import Data.Function (on)
 import Data.Functor (($>))
 import Data.Functor.Identity (Identity)
-import Data.List (foldl', isPrefixOf, sortBy, stripPrefix)
-import Language.Haskell.TH
-import Language.Haskell.TH.Quote
-import Text.Parsec hiding (Empty)
+import Data.List (isPrefixOf, sortBy, stripPrefix)
+import Language.Haskell.TH (
+    Con (NormalC),
+    Dec (DataD),
+    ExpQ,
+    Info (TyConI),
+    Name,
+    Q,
+    Type (AppT, ConT, ListT, TupleT),
+    TypeQ,
+    conE,
+    conT,
+    listE,
+    lookupTypeName,
+    mkName,
+    nameBase,
+    reify,
+    tupleDataName,
+    varE,
+ )
+import Language.Haskell.TH.Quote (QuasiQuoter (..))
+import Text.Parsec (
+    ParseError,
+    Parsec,
+    anyChar,
+    between,
+    chainl1,
+    char,
+    choice,
+    digit,
+    eof,
+    getInput,
+    letter,
+    many,
+    many1,
+    newline,
+    noneOf,
+    oneOf,
+    option,
+    optionMaybe,
+    optional,
+    parse,
+    sepBy,
+    string,
+    try,
+    (<?>),
+    (<|>),
+ )
 import Text.Parsec.Expr (
     Assoc (..),
     Operator (..),
@@ -106,14 +150,16 @@ format :: QuasiQuoter
 format =
     QuasiQuoter
         { quoteExp = makeParser <=< parseFormat
-        , quoteType = toType <=< (fmap (\ (_, _, p) -> p) . parseFormat)
+        , quoteType = toType <=< (fmap (\(_, _, p) -> p) . parseFormat)
         , quotePat = const $ fail "Patterns not supported"
         , quoteDec = const $ fail "Decs not supported"
         }
   where
-    makeParser (year, day, p) = 
-        [|let fmtparser = parseErr ($(toParser p) <* eof) 
-           in fmtparser <$> getRawInput year day|]
+    makeParser (year, day, p) =
+        [|
+            let fmtparser = parseErr ($(toParser p) <* eof)
+             in fmtparser <$> getRawInput year day
+            |]
 
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`

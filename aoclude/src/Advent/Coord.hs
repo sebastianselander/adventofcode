@@ -5,16 +5,16 @@
 module Advent.Coord where
 
 import Control.Monad.ST (ST, runST, stToIO)
+import Data.Array (Array, array)
 import Data.Array.Base qualified as AB
 import Data.Array.IO.Internals qualified as AB
-import Data.Data
+import Data.Data (Data)
 import Data.Foldable (toList)
 import Data.Map (Map, findWithDefault, keys)
 import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), (+#))
 import GHC.Generics (Generic)
 import GHC.Ix (Ix (..), indexError)
 import GHC.ST (ST (ST))
-import Data.Array
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -93,7 +93,8 @@ scale n = mapCoord (n *)
 
 -- | Precondition: Non-empty
 coordMatrix :: [[a]] -> Array Coord a
-coordMatrix xs = array (C 0 0, C (length xs) (length (head xs))) $ coordLines xs
+coordMatrix [] = error "coordMatrix: empty list"
+coordMatrix xs@(x:_) = array (C 0 0, C (length xs) (length x)) $ coordLines xs
 
 {- | Given a list of lines pair up each character with
 its position.
