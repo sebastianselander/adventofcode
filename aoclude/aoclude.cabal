@@ -36,8 +36,8 @@ library
     , template-haskell
     , vector
     , extra
-    , search-algorithms
+    , search-algorithms >= 0.3.3
     , array
 
   hs-source-dirs:   src
-  default-language: GHC2021
+  default-language: GHC2024

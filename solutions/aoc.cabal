@@ -1,5 +1,5 @@
 cabal-version:   3.0
-name:            aoc24
+name:            aoc
 version:         0.1.0.0
 
 -- synopsis:
@@ -17,23 +17,22 @@ extra-doc-files: CHANGELOG.md
 -- extra-source-files:
 
 common extensions
-  default-language:  GHC2021
+  default-language:   GHC2024
   default-extensions: QuasiQuotes
+
 common day
-  hs-source-dirs:   src
+  hs-source-dirs: src
   build-depends:
     , aoclude
-    , base
-    , containers
-    , extra
-    , matrix
-    , monad-memo
-    , mtl
-    , search-algorithms
-    , unordered-containers
-    , vector
-
-  default-language: GHC2021
+    , array                 >=0.5.7.0
+    , base                  >=4.20
+    , containers            >=0.7
+    , extra                 >=1.8
+    , monad-memo            >=0.5.4
+    , mtl                   >=2.3.1
+    , search-algorithms     >=0.3.3
+    , unordered-containers  >=0.2.20
+    , vector                >=0.13.2.0
 
 executable 2024-01
   import:  day, extensions
