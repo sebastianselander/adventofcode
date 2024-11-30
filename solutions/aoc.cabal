@@ -2,19 +2,15 @@ cabal-version:   3.0
 name:            aoc
 version:         0.1.0.0
 
--- synopsis:
 -- description:
 license:         MIT
 license-file:    LICENSE
 author:          sebastianselander
 maintainer:      sebastian.selander@gmail.com
 
--- copyright:
 category:        Challenges
 build-type:      Simple
 extra-doc-files: CHANGELOG.md
-
--- extra-source-files:
 
 common extensions
   default-language:   GHC2024
@@ -30,7 +26,9 @@ common day
     , extra                 >=1.8
     , monad-memo            >=0.5.4
     , mtl                   >=2.3.1
+    , regex                 >=1.1.0.2
     , search-algorithms     >=0.3.3
+    , text                  >=2.1.2
     , unordered-containers  >=0.2.20
     , vector                >=0.13.2.0
 
