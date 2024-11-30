@@ -236,8 +236,9 @@ toType = \case
     Optional format
         | interesting format -> [t|Maybe $(toType format)|]
         | otherwise -> [t|()|]
-    At ts
-        | isUpper (head ts) -> conT (mkName ts)
+    At [] -> fail "At: no text"
+    At tag@(t:_)
+        | isUpper t -> conT (mkName tag)
         | otherwise -> fail "toType: can't read type variables"
     Group format -> [t|$(toType format)|]
     Gather format -> [t|$(toType format)|]
@@ -284,8 +285,9 @@ toParser = \case
         | interesting format -> [|option Nothing (Just <$> $(toParser format))|]
         | otherwise -> [|optional $(toParser format)|]
     Gather format -> [|fst <$> gather $(toParser format)|]
-    At tag
-        | isUpper (head tag) -> makeEnumParser tag
+    At [] -> fail "At: empty string"
+    At tag@(t:_)
+        | isUpper t -> makeEnumParser tag
         | otherwise -> varE (mkName tag)
     Literal str -> [|void (string str)|]
     Group format -> [|$(toParser format)|]
