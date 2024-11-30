@@ -12,7 +12,7 @@ module Advent.Coord3 where
 import Data.Data (Data)
 import Data.Foldable (toList)
 import GHC.Generics (Generic)
-import GHC.Ix (Ix(unsafeIndex, range, index, inRange, unsafeRangeSize), indexError)
+import GHC.Ix (Ix(unsafeIndex, range, inRange, unsafeRangeSize))
 
 -- | Three-dimensional coordinate: x, y, z
 data Coord3 = C3 !Int !Int !Int

@@ -18,7 +18,7 @@ module Advent.Permutation
 import Advent.Group (Group(..))
 import Data.Function (fix)
 import Data.IntSet qualified as IntSet
-import Data.List (foldl', unfoldr)
+import Data.List (unfoldr)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Semigroup (Semigroup(sconcat))
 import Data.Vector.Unboxed qualified as V
@@ -176,8 +176,8 @@ instance Show (Permutation n) where
 -- | Parse a permutation as a list literal.
 instance KnownNat n => Read (Permutation n) where
   readsPrec p str =
-    [ (p, str')
+    [ (p', str')
     | (xs, str') <- readsPrec p str
-    , let p = P xs :: Permutation n
-    , isValid p
+    , let p' = P xs :: Permutation n
+    , isValid p'
     ]

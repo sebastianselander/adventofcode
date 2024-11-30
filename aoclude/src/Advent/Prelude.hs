@@ -29,7 +29,7 @@ freqs = Data.Map.fromListWith (+) . Prelude.foldr ((:) . (,1)) mempty
 
 -- | Error if the index is out of bounds
 setAt :: Int -> a -> [a] -> [a]
-setAt n x = (\(l, r) -> l ++ x : tail r) . Prelude.splitAt n
+setAt n x = (\(l, r) -> l ++ x : (drop 1) r) . Prelude.splitAt n
 
 -- | Does nothing if index out of bounds
 updateAt :: Int -> (a -> a) -> [a] -> [a]
@@ -65,7 +65,7 @@ both f = bimap f f
 
 safeTail :: [a] -> [a]
 safeTail [] = []
-safeTail xs = tail xs
+safeTail xs = drop 1 xs
 
 countElem :: (Foldable f, Eq a) => a -> f a -> Int
 countElem e = Prelude.foldr (\x acc -> if x == e then acc + 1 else acc) 0
