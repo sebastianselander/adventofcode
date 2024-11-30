@@ -9,7 +9,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         haskell-packages = nixpkgs.legacyPackages.${system}.haskell.packages;
-        ghcVersion = "966";
+        ghcVersion = "910";
         pkgs = import nixpkgs { inherit system; };
       in {
         packages = {
@@ -19,8 +19,10 @@
         devShells = {
           default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
-              ghc
-              haskell-language-server
+              haskell.compiler.ghc910
+              (haskell-language-server.override {
+                supportedGhcVersions = [ "${ghcVersion}" ];
+              })
               haskellPackages.cabal-install
               haskellPackages.fourmolu
               haskellPackages.ghcid
