@@ -544,6 +544,28 @@ symbolNames =
     , ("TILDE", '~')
     ]
 
+
+i :: Parser Int
+i = signed
+
+u :: Parser Int
+u = unsigned
+
+d :: Parser Int
+d = digitToInt <$> digit 
+
+n :: Parser ()
+n = void newline
+
+c :: Parser Char
+c = letter 
+
+s :: Parser String
+s = many1 letter
+
+y :: Parser Char
+y = symbol
+
 -- Parsing for the Quasi Quoter
 
 type Parser = Parsec String ()
