@@ -21,6 +21,7 @@ common day
     , aoclude
     , array                 >=0.5.7.0
     , base                  >=4.20
+    , composition           >=1.0.2.2
     , containers            >=0.7
     , extra                 >=1.8
     , monad-memo            >=0.5.4
@@ -30,8 +31,11 @@ common day
     , text                  >=2.1.2
     , unordered-containers  >=0.2.20
     , vector                >=0.13.2.0
-    , composition >= 1.0.2.2
 
 executable 2024-01
   import:  day, extensions
   main-is: 2024/01.hs
+     
+executable 2024-02
+  import: day, extensions
+  main-is: 2024/02.hs
