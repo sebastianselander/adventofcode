@@ -1,8 +1,9 @@
 module Main where
-import Advent.Format (format,fmt)
-import Data.List
-import Advent.Prelude (countElem, both)
+
+import Advent.Format (format)
+import Advent.Prelude (both, countElem)
 import Data.Composition ((.:))
+import Data.List (sort)
 
 main :: IO ()
 main = do
