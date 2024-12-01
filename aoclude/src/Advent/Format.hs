@@ -68,6 +68,7 @@ import Text.Parsec.Expr (
     buildExpressionParser,
  )
 import Text.Printf (printf)
+import System.Directory.Extra (doesFileExist)
 
 intro :: Q [Dec]
 intro = return []
@@ -95,7 +96,12 @@ data Format
     deriving (Show, Typeable, Data)
 
 getRawInput :: Int -> Int -> IO String
-getRawInput year day = readFile (printf "inputs/%d/%02d.txt" year day)
+getRawInput year day = do
+    let file = "inputs/%d/%02d.txt"
+    executable <- doesFileExist file
+    if executable then readFile (printf file year day)
+                  -- hack work around for repl
+                  else readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year day)
 
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`
