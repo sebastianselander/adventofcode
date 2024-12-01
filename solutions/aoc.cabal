@@ -12,7 +12,7 @@ build-type:      Simple
 extra-doc-files: CHANGELOG.md
 
 common extensions
-  default-language:   GHC2024
+  default-language:   GHC2021
   default-extensions: QuasiQuotes
 
 common day
@@ -26,6 +26,7 @@ common day
     , extra                 >=1.8
     , monad-memo            >=0.5.4
     , mtl                   >=2.3.1
+    , parsec                >=3.1.17.0
     , regex                 >=1.1.0.2
     , search-algorithms     >=0.3.3
     , text                  >=2.1.2
@@ -35,7 +36,7 @@ common day
 executable 2024-01
   import:  day, extensions
   main-is: 2024/01.hs
-     
+
 executable 2024-02
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/02.hs
