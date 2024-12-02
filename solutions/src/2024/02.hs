@@ -3,20 +3,18 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude (countOn, deleteAt, safeTail, (...))
+import Advent.Prelude (count, deletes, safeTail)
+import Data.Composition ((.:))
 
 main :: IO ()
 main = do
     input <- [format|2024 2 (%i& %n)*|]
-    print $ countOn id $ fmap safe input
-    print $ countOn id $ fmap (any safe . removals) input
+    print $ count True $ fmap safe input
+    print $ count True $ fmap (any safe . deletes 1) input
 
 safe :: [Int] -> Bool
 safe xs =
     (byPair (<) xs || byPair (>) xs)
-        && byPair (\x y -> abs (x - y) `elem` [1, 2, 3]) xs
+        && byPair ((`elem` [1 .. 3]) . abs .: (-)) xs
   where
     byPair f xs = and [f x y | x <- xs | y <- safeTail xs]
-
-removals :: [Int] -> [[Int]]
-removals xs = [deleteAt n xs | n <- 0 ... length xs]
