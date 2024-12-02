@@ -1,7 +1,7 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude (both, countElem)
+import Advent.Prelude (both, count)
 import Data.Composition ((.:))
 import Data.List (sort)
 
@@ -10,4 +10,4 @@ main = do
     input <- [format|2024 1 ((%i   %i)%n)*|]
     let (xs, ys) = both sort $ unzip input
     print $ sum $ zipWith (abs .: (-)) xs ys
-    print $ sum [x * countElem x ys | x <- xs]
+    print $ sum [x * count x ys | x <- xs]

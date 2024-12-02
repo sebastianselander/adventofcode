@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 module Advent.Prelude where
 
@@ -8,6 +9,18 @@ import Data.List
 import Data.Map (Map)
 import qualified Data.Map
 import Data.Maybe (fromJust)
+import Data.Foldable (toList)
+import Control.Applicative (Alternative)
+import qualified Data.Array.IArray as A
+import qualified Data.Array.Base as AB
+import qualified GHC.Arr as GA
+import Control.Applicative (Alternative(empty))
+import Data.IntMap (IntMap)
+import Data.Set (Set)
+import qualified Data.IntMap as IntMap
+import qualified Data.Set as Set
+import Data.Ord (comparing)
+import GHC.Stack (HasCallStack)
 
 {- | Bottom if the list does not contain both elements
   Quite slow probaby
@@ -24,8 +37,73 @@ toTuple xs = case Foldable.toList xs of
     _ -> error "ERROR: more than two elements"
 
 -- | Returns a map of frequencies of elements
-freqs :: (Foldable f, Ord a) => f a -> Map a Int
-freqs = Data.Map.fromListWith (+) . Prelude.foldr ((:) . (,1)) mempty
+counts :: (Foldable f, Ord a) => f a -> Map a Int
+counts = Data.Map.fromListWith (+) . Prelude.foldr ((:) . (,1)) mempty
+
+chunks :: Int -> [a] -> [[a]]
+chunks _ [] = []
+chunks n xs =
+  case splitAt n xs of
+    (a,b) -> a : chunks n b
+
+-- | Index an array returning 'Nothing' if the index is out of bounds.
+arrIx :: (A.IArray a e, A.Ix i, Alternative f) => a i e -> i -> f e
+arrIx a i
+  | A.inRange b i = pure $! AB.unsafeAt a (GA.unsafeIndex b i)
+  | otherwise = empty
+  where b = A.bounds a
+{-# Inline arrIx #-}
+
+uniqueAssignment ::
+  (Traversable t, Ord a) =>
+  t (Set a) {- ^ element must map to one of the corresponding set members -} ->
+  [t a]     {- ^ possible assignments -}
+uniqueAssignment m =
+  [ snd (mapAccumL (\(x:xs) _ -> (xs,x)) (IntMap.elems a) m)
+  | a <- go IntMap.empty (zip [0..] (toList m))]
+  where
+    go :: Ord a => IntMap a -> [(Int, Set a)] -> [IntMap a]
+    go a xs =
+      case sortBy (comparing (Set.size . snd)) xs of
+        [] -> [a]
+        (k,vs):rest ->
+          do v <- Set.toList vs
+             go (IntMap.insert k v a) (fmap (Set.delete v) <$> rest)
+
+-- | Convert a big-endian list of digits to a single number.
+--
+-- >>> fromDigits 10 [1,2,3,4]
+-- 1234
+--
+-- >>> fromDigits 2 [12]
+-- 12
+--
+-- >>> fromDigits 10 []
+-- 0
+fromDigits :: HasCallStack => Integral a => a -> [a] -> a
+fromDigits base
+  | base < 2  = error "fromDigits: bad base"
+  | otherwise = foldl' (\acc x -> acc * base + x) 0
+
+-- | Convert a number to a list of digits in a given radix.
+--
+-- >>> toDigits 2 12
+-- [1,1,0,0]
+--
+-- >>> toDigits 10 1234
+-- [1,2,3,4]
+--
+-- >>> toDigits 10 0
+-- []
+toDigits :: HasCallStack => Integral a => a -> a -> [a]
+toDigits base x
+  | base < 2  = error "toDigits: bad base"
+  | x < 0     = error "toDigits: negative number"
+  | otherwise = go [] x
+  where
+    go xs 0 = xs
+    go xs n = case quotRem n base of
+                (n', digit) -> go (digit:xs) n'
 
 -- | Error if the index is out of bounds
 setAt :: Int -> a -> [a] -> [a]
@@ -73,11 +151,23 @@ safeTail :: [a] -> [a]
 safeTail [] = []
 safeTail xs = drop 1 xs
 
-countOn :: (Foldable f) => (a -> Bool) -> f a -> Int
-countOn f = Prelude.foldr (\x acc -> if f x then acc + 1 else acc) 0
+count :: (Foldable f, Eq a) => a -> f a -> Int
+count = countBy . (==)
 
-countElem :: (Foldable f, Eq a) => a -> f a -> Int
-countElem e = Prelude.foldr (\x acc -> if x == e then acc + 1 else acc) 0
+-- | Count the number of elements in a foldable value that satisfy a predicate.
+countBy :: Foldable f => (a -> Bool) -> f a -> Int
+countBy p = foldl' (\acc x -> if p x then acc+1 else acc) 0
+
+same :: Foldable t => Eq a => t a -> Bool
+same x =
+  case toList x of
+    []   -> True
+    y:ys -> all (y ==) ys
+
+-- | Returns a list of ways to select an element from a list without
+-- replacement.
+pickOne :: [a] -> [(a, [a])]
+pickOne xs = [ (x, l++r) | (l,x:r) <- zip (inits xs) (tails xs) ]
 
 -- | Generate a range inclusive in the lower bound, exclusive in the upper bound
 (...) :: (Num a, Enum a) => a -> a -> [a]
@@ -87,3 +177,4 @@ countElem e = Prelude.foldr (\x acc -> if x == e then acc + 1 else acc) 0
 -- equivalent to `[a .. b]`
 (..=) :: (Num a, Enum a) => a -> a -> [a]
 (..=) a b = [a .. b]
+
