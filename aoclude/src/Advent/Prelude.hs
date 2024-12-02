@@ -1,4 +1,3 @@
-{-# LANGUAGE ParallelListComp #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 
@@ -114,7 +113,7 @@ toDigits base x
 
 -- | Error if the index is out of bounds
 setAt :: Int -> a -> [a] -> [a]
-setAt n x = (\(l, r) -> l ++ x : (drop 1) r) . Prelude.splitAt n
+setAt n x = (\(l, r) -> l ++ x : drop 1 r) . Prelude.splitAt n
 
 -- | Does nothing if index out of bounds
 updateAt :: Int -> (a -> a) -> [a] -> [a]

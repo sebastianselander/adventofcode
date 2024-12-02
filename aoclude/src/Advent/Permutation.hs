@@ -18,7 +18,7 @@ module Advent.Permutation
 import Advent.Group (Group(..))
 import Data.Function (fix)
 import Data.IntSet qualified as IntSet
-import Data.List (unfoldr)
+import Data.List (unfoldr, foldl')
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Semigroup (Semigroup(sconcat))
 import Data.Vector.Unboxed qualified as V

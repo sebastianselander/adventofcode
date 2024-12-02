@@ -13,7 +13,7 @@ import Data.Data (Data, Typeable)
 import Data.Function (on)
 import Data.Functor (($>))
 import Data.Functor.Identity (Identity)
-import Data.List (isPrefixOf, sortBy, stripPrefix)
+import Data.List (isPrefixOf, sortBy, stripPrefix, foldl')
 import Language.Haskell.TH (
     Con (NormalC),
     Dec (DataD),
