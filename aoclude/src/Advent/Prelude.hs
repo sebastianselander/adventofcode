@@ -78,3 +78,12 @@ countOn f = Prelude.foldr (\x acc -> if f x then acc + 1 else acc) 0
 
 countElem :: (Foldable f, Eq a) => a -> f a -> Int
 countElem e = Prelude.foldr (\x acc -> if x == e then acc + 1 else acc) 0
+
+-- | Generate a range inclusive in the lower bound, exclusive in the upper bound
+(...) :: (Num a, Enum a) => a -> a -> [a]
+(...) a b = [a .. b - 1]
+
+-- | Generate a range inclusive in the lower bound, inclus in the upper bound
+-- equivalent to `[a .. b]`
+(..=) :: (Num a, Enum a) => a -> a -> [a]
+(..=) a b = [a .. b]
