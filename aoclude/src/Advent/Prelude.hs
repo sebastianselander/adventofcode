@@ -38,6 +38,12 @@ updateAt n f (x:xs)
   | n == 0 = f x : xs
   | otherwise = x : updateAt (n - 1) f xs
 
+-- | Delete element at index
+deleteAt :: Int -> [a] -> [a]
+deleteAt _ [] = []
+deleteAt 0 (_:xs) = xs
+deleteAt n (x:xs) = x : deleteAt (n-1) xs
+
 findIndicesElem :: (Foldable t) => (a -> Bool) -> t a -> [(a, Int)]
 findIndicesElem p = Prelude.reverse . fst . Data.List.foldl' go ([], 0)
   where
@@ -66,6 +72,9 @@ both f = bimap f f
 safeTail :: [a] -> [a]
 safeTail [] = []
 safeTail xs = drop 1 xs
+
+countOn :: (Foldable f) => (a -> Bool) -> f a -> Int
+countOn f = Prelude.foldr (\x acc -> if f x then acc + 1 else acc) 0
 
 countElem :: (Foldable f, Eq a) => a -> f a -> Int
 countElem e = Prelude.foldr (\x acc -> if x == e then acc + 1 else acc) 0
