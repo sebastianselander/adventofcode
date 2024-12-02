@@ -1,8 +1,9 @@
+{-# LANGUAGE ParallelListComp #-}
+
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude (countOn, deleteAt)
-import Data.List
+import Advent.Prelude (countOn, deleteAt, safeTail, (...))
 
 main :: IO ()
 main = do
@@ -11,10 +12,11 @@ main = do
     print $ countOn id $ fmap (any safe . removals) input
 
 safe :: [Int] -> Bool
-safe x = (byPair (<) x || byPair (>) x) && byPair (\x y -> abs (x - y) >= 1 && abs (x - y) <= 3) x
+safe xs =
+    (byPair (<) xs || byPair (>) xs)
+        && byPair (\x y -> abs (x - y) `elem` [1, 2, 3]) xs
   where
-    byPair f (x : y : xs) = f x y && byPair f (y : xs)
-    byPair _ _ = True
+    byPair f xs = and [f x y | x <- xs | y <- safeTail xs]
 
 removals :: [Int] -> [[Int]]
-removals xs = [deleteAt n xs | n <- [0 .. length xs - 1]]
+removals xs = [deleteAt n xs | n <- 0 ... length xs]
