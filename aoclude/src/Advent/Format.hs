@@ -34,6 +34,7 @@ import Language.Haskell.TH (
     varE,
  )
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
+import System.Directory.Extra (doesFileExist)
 import Text.Parsec (
     ParseError,
     Parsec,
@@ -68,7 +69,6 @@ import Text.Parsec.Expr (
     buildExpressionParser,
  )
 import Text.Printf (printf)
-import System.Directory.Extra (doesFileExist)
 
 intro :: Q [Dec]
 intro = return []
@@ -95,13 +95,23 @@ data Format
     | Follows !Format !Format
     deriving (Show, Typeable, Data)
 
+getTestInput :: Int -> IO String
+getTestInput year = do
+    let file = "inputs/%d/test.txt"
+    executable <- doesFileExist file
+    if executable
+        then readFile (printf file year)
+        else -- hack work around for repl
+            readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year)
+
 getRawInput :: Int -> Int -> IO String
 getRawInput year day = do
     let file = "inputs/%d/%02d.txt"
     executable <- doesFileExist file
-    if executable then readFile (printf file year day)
-                  -- hack work around for repl
-                  else readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year day)
+    if executable
+        then readFile (printf file year day)
+        else -- hack work around for repl
+            readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year day)
 
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`
@@ -152,6 +162,21 @@ COMMA: :
 PLUS: +
 TILDE: ~
 -}
+format' :: QuasiQuoter
+format' =
+    QuasiQuoter
+        { quoteExp = makeParser <=< parseFormat
+        , quoteType = toType <=< (fmap (\(_, _, p) -> p) . parseFormat)
+        , quotePat = const $ fail "Patterns not supported"
+        , quoteDec = const $ fail "Decs not supported"
+        }
+  where
+    makeParser (year, _, p) =
+        [|
+            let fmtparser = parseErr ($(toParser p) <* eof)
+             in fmtparser <$> getTestInput year
+            |]
+
 format :: QuasiQuoter
 format =
     QuasiQuoter
@@ -243,7 +268,7 @@ toType = \case
         | interesting format -> [t|Maybe $(toType format)|]
         | otherwise -> [t|()|]
     At [] -> fail "At: no text"
-    At tag@(t:_)
+    At tag@(t : _)
         | isUpper t -> conT (mkName tag)
         | otherwise -> fail "toType: can't read type variables"
     Group format -> [t|$(toType format)|]
@@ -292,7 +317,7 @@ toParser = \case
         | otherwise -> [|optional $(toParser format)|]
     Gather format -> [|fst <$> gather $(toParser format)|]
     At [] -> fail "At: empty string"
-    At tag@(t:_)
+    At tag@(t : _)
         | isUpper t -> makeEnumParser tag
         | otherwise -> varE (mkName tag)
     Literal str -> [|void (string str)|]
@@ -550,7 +575,6 @@ symbolNames =
     , ("TILDE", '~')
     ]
 
-
 i :: Parser Int
 i = signed
 
@@ -558,13 +582,13 @@ u :: Parser Int
 u = unsigned
 
 d :: Parser Int
-d = digitToInt <$> digit 
+d = digitToInt <$> digit
 
 n :: Parser ()
 n = void newline
 
 c :: Parser Char
-c = letter 
+c = letter
 
 s :: Parser String
 s = many1 letter
