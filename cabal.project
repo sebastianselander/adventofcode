@@ -1,3 +1,4 @@
 packages:
     aoclude/aoclude.cabal
     solutions/aoc.cabal
+multi-repl: true
