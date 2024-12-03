@@ -13,7 +13,7 @@ import Data.Data (Data, Typeable)
 import Data.Function (on)
 import Data.Functor (($>))
 import Data.Functor.Identity (Identity)
-import Data.List (isPrefixOf, sortBy, stripPrefix, foldl')
+import Data.List (foldl', isPrefixOf, sortBy, stripPrefix)
 import Language.Haskell.TH (
     Con (NormalC),
     Dec (DataD),
@@ -81,6 +81,7 @@ data Format
     | Char
     | Newline
     | Symbol
+    | AnyChar
     | String
     | Optional !Format
     | At !String
@@ -258,6 +259,7 @@ toType = \case
     Newline -> [t|()|]
     Unsigned -> [t|Int|]
     Symbol -> [t|Char|]
+    AnyChar -> [t|Char|]
     Signed -> [t|Int|]
     Digit -> [t|Int|]
     String -> [t|String|]
@@ -303,7 +305,8 @@ toType = \case
 
 toParser :: Format -> ExpQ
 toParser = \case
-    Empty -> [|return () <|> "<empty>"|]
+    Empty -> [|return () <?> "<empty>"|]
+    AnyChar -> [|satisfy (const True) <?> "<any char>"|]
     Newline -> [|void newline <?> "newline"|]
     String -> [|many1 letter <?> "<letters>"|]
     Symbol -> [|many1 symbol <?> "<symbol>"|]
@@ -364,6 +367,7 @@ interesting = \case
     Literal{} -> False
     Newline -> False
     Signed -> True
+    AnyChar -> True
     Digit -> True
     Symbol -> True
     Unsigned -> True
@@ -518,18 +522,10 @@ pattern Maybe x <- AppT (ConT (nameBase -> "Maybe")) x
 pattern Either :: Type -> Type -> Type
 pattern Either l r <- AppT (AppT (ConT (nameBase -> "Either")) l) r
 
+
 isCharTy :: Type -> Bool
 isCharTy (ConT (nameBase -> "Char")) = True
 isCharTy _ = False
-
--- Gather !Format
--- Group !Format
--- Many !Format
--- Some !Format
--- Discard !Format
--- Alternative !Format !Format
--- SepBy !Format !Format
--- Follows !Format !Format
 
 processSymbolName :: String -> Q String
 processSymbolName str =
@@ -647,6 +643,7 @@ atom =
                 , char 'n' $> Newline
                 , char 'u' $> Unsigned
                 , char 'y' $> Symbol
+                , char 't' $> AnyChar
                 ]
         , char '@' *> (At <$> many1 letter)
         , Literal <$> (char '\\' *> fmap (: []) anyChar)
