@@ -6,7 +6,6 @@ module Advent.Prelude where
 import Control.Applicative (Alternative (empty))
 import Data.Array.Base qualified as AB
 import Data.Array.IArray qualified as A
-import Data.Bifunctor
 import Data.Foldable (toList)
 import Data.Foldable qualified as Foldable
 import Data.IntMap (IntMap)
@@ -149,9 +148,6 @@ fixed f !x = if x == y then x else fixed f y
 
 elemOn :: (Eq b, Foldable f) => (a -> b) -> b -> f a -> Bool
 elemOn f e = Foldable.foldr ((||) . (== e) . f) False
-
-both :: (Bifunctor f) => (a -> b) -> f a a -> f b b
-both f = bimap f f
 
 safeTail :: [a] -> [a]
 safeTail [] = []
