@@ -1,34 +1,22 @@
 module Main where
 
-import Advent.Format (fmt, format)
-import Control.Monad.Identity (Identity)
-import Data.Either (lefts, partitionEithers)
+import Advent.Format (format)
+import Data.Either (lefts)
+import Text.Parsec (Parsec, satisfy)
 import Data.Maybe (catMaybes)
-import Text.Parsec (ParsecT, satisfy)
+
+t :: Parsec String u Char
+t = satisfy $ const True
 
 main :: IO ()
 main = do
-    input <- [format|2024 3 (mul\(%i,%i\)|(do\(\))!|(don't\(\))!|@t)*|]
-    print $ eval True True $ g input
-    print $ eval True False $ g input
+    input <- catMaybes <$> [format|2024 3 (mul\(%i,%i\)|do\(\)|don't\(\)|~%t)*|]
+    print $ eval True True input
+    print $ eval True False input
 
-data Instr = Mul Int Int | Do | Dont
-    deriving (Show)
-
-t :: ParsecT String u Identity Char
-t = satisfy $ const True
-
-g :: [Either (Either (Either (Int, Int) String) String) Char] -> [Instr]
-g (Left (Left (Left (n, m))) : xs) = Mul n m : g xs
-g (Left (Left (Right _)) : xs) = Do : g xs
-g (Left (Right _) : xs) = Dont : g xs
-g (_ : xs) = g xs
-g [] = []
-
-
-eval :: Bool -> Bool -> [Instr] -> Int
-eval True to ((Mul x y) : xs) = x * y + eval True to xs
-eval b to (Do : xs) = eval True to xs
-eval b to (Dont : xs) = eval to to xs
-eval b to (x : xs) = eval b to xs
+eval :: Bool -> Bool -> [Maybe (Maybe (Int, Int))] -> Int
+eval True to ((Just (Just (n, m))) : xs) = n * m + eval True to xs
+eval b to ((Just Nothing) : xs) = eval True to xs
+eval b to (Nothing : xs) = eval to to xs
+eval b to (x:xs) = eval b to xs
 eval b to [] = 0
