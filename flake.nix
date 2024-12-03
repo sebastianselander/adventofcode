@@ -28,6 +28,7 @@
               zlib
               blas
               lapack
+              lua
             ];
           };
         };
