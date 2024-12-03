@@ -58,6 +58,7 @@ import Text.Parsec (
     parse,
     sepBy,
     string,
+    satisfy,
     try,
     (<?>),
     (<|>),
