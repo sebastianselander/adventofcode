@@ -1,12 +1,7 @@
 module Main where
 
 import Advent.Format (format)
-import Data.Either (lefts)
-import Text.Parsec (Parsec, satisfy)
 import Data.Maybe (catMaybes)
-
-t :: Parsec String u Char
-t = satisfy $ const True
 
 main :: IO ()
 main = do
