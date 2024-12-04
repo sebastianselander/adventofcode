@@ -88,13 +88,25 @@ south = C 1 0
 west :: Coord
 west = C 0 (-1)
 
+nw :: Coord
+nw = C (-1) (-1)
+
+ne :: Coord
+ne = C (-1) 1
+
+sw :: Coord
+sw = C 1 (-1)
+
+se :: Coord
+se = C 1 1
+
 scale :: Int -> Coord -> Coord
 scale n = mapCoord (n *)
 
 -- | Precondition: Non-empty
 coordMatrix :: [[a]] -> Array Coord a
 coordMatrix [] = error "coordMatrix: empty list"
-coordMatrix xs@(x:_) = array (C 0 0, C (length xs) (length x)) $ coordLines xs
+coordMatrix xs@(x : _) = array (C 0 0, C (length xs) (length x)) $ coordLines xs
 
 {- | Given a list of lines pair up each character with
 its position.
