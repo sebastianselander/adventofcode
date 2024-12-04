@@ -1,25 +1,27 @@
 module Main where
 
-import Advent.Coord (Coord, above, below, coordLines, left, right)
+import Advent.Coord (Coord, above, below, coordLines, left, right, coordArray)
 import Advent.Format (format)
 import Advent.Prelude (count, countBy)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe (mapMaybe)
+import Data.Array
+import Data.Array.Base ((!?))
 
 main :: IO ()
 main = do
     input <- [format|2024 4 (%s%n)*|]
-    let m = Map.fromList $ coordLines input
-    let part1 = sum [xmasLook c m | c <- Map.keys m]
-    let part2 = count 2 [masLook c m | c <- Map.keys m]
+    let arr = coordArray input
+    let part1 = sum [xmasLook c arr | c <- indices arr]
+    let part2 = count 2 [masLook c arr | c <- indices arr]
     print part1
     print part2
 
-lookupAll :: (Ord k) => Map k a -> [k] -> [a]
-lookupAll m = mapMaybe (`Map.lookup` m)
+lookupAll :: (Ix k) => Array k a -> [k] -> [a]
+lookupAll m = mapMaybe (m !?)
 
-xmasLook :: Coord -> Map Coord Char -> Int
+xmasLook :: Coord -> Array Coord Char -> Int
 xmasLook c m = do
     let four f = take 4 $ iterate f c
     count "XMAS" $
@@ -35,7 +37,7 @@ xmasLook c m = do
             , four (left . below)
             ]
 
-masLook :: Coord -> Map Coord Char -> Int
+masLook :: Coord -> Array Coord Char -> Int
 masLook c m = do
     let upr = right $ above c
     let upl = left $ above c
