@@ -70,6 +70,8 @@ import Text.Parsec.Expr (
     buildExpressionParser,
  )
 import Text.Printf (printf)
+import Data.List.Extra (splitOn)
+import Data.Maybe (mapMaybe)
 
 intro :: Q [Dec]
 intro = return []
@@ -529,15 +531,20 @@ isCharTy (ConT (nameBase -> "Char")) = True
 isCharTy _ = False
 
 processSymbolName :: String -> Q String
-processSymbolName str =
-    case break ('_' ==) str of
-        (name, rest) ->
-            case lookup name symbolNames of
-                Nothing -> return name
-                Just sym ->
-                    case rest of
-                        [] -> pure [sym]
-                        _ : str' -> (sym :) <$> processSymbolName str'
+processSymbolName str = pure $ concatMap (\x -> maybe x (:"") (lookup x symbolNames)) xs
+  where
+    xs = splitOn "_" str
+
+    -- case break ('_' ==) str of
+    --     (name, rest) ->
+    --         case lookup name symbolNames of
+    --             Nothing -> case rest of
+    --                 [] -> pure name
+    --                 _ -> (name <>) <$> processSymbolName rest
+    --             Just sym ->
+    --                 case rest of
+    --                     [] -> pure [sym]
+    --                     _ : str' -> (sym :) <$> processSymbolName str'
 
 symbolNames :: [(String, Char)]
 symbolNames =
