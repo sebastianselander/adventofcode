@@ -1,13 +1,13 @@
 module Main where
 
-import Advent.Coord (Coord, above, below, coordLines, left, right, coordArray)
+import Advent.Coord (Coord, above, below, coordArray, coordLines, left, right)
 import Advent.Format (format)
 import Advent.Prelude (count, countBy)
+import Data.Array (Array, Ix, indices, (!))
+import Data.Array.Base ((!?))
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe (mapMaybe)
-import Data.Array
-import Data.Array.Base ((!?))
 
 main :: IO ()
 main = do
@@ -22,32 +22,36 @@ lookupAll :: (Ix k) => Array k a -> [k] -> [a]
 lookupAll m = mapMaybe (m !?)
 
 xmasLook :: Coord -> Array Coord Char -> Int
-xmasLook c m = do
-    let four f = take 4 $ iterate f c
-    count "XMAS" $
-        fmap
-            (lookupAll m)
-            [ four above
-            , four below
-            , four right
-            , four left
-            , four (right . above)
-            , four (left . above)
-            , four (right . below)
-            , four (left . below)
-            ]
+xmasLook c m
+    | m ! c /= 'X' = 0
+    | otherwise =
+        let four f = take 4 $ iterate f c
+         in count "XMAS" $
+                fmap
+                    (lookupAll m)
+                    [ four above
+                    , four below
+                    , four right
+                    , four left
+                    , four (right . above)
+                    , four (left . above)
+                    , four (right . below)
+                    , four (left . below)
+                    ]
 
 masLook :: Coord -> Array Coord Char -> Int
-masLook c m = do
-    let upr = right $ above c
-    let upl = left $ above c
-    let downl = left $ below c
-    let downr = right $ below c
-    count "MAS" $
-        fmap
-            (lookupAll m)
-            [ [downl, c, upr]
-            , [downr, c, upl]
-            , [upr, c, downl]
-            , [upl, c, downr]
-            ]
+masLook c m
+    | m ! c /= 'A' = 0
+    | otherwise = do
+        let upr = right $ above c
+        let upl = left $ above c
+        let downl = left $ below c
+        let downr = right $ below c
+        count "MAS" $
+            fmap
+                (lookupAll m)
+                [ [downl, c, upr]
+                , [downr, c, upl]
+                , [upr, c, downl]
+                , [upl, c, downr]
+                ]
