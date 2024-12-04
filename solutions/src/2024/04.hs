@@ -1,18 +1,11 @@
 module Main where
 
-import Advent.Coord (
-    Coord,
-    above,
-    below,
-    coordLines,
-    left,
-    right,
- )
+import Advent.Coord (Coord, above, below, coordLines, left, right)
 import Advent.Format (format)
 import Advent.Prelude (count, countBy)
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 
 main :: IO ()
 main = do
@@ -23,29 +16,23 @@ main = do
     print part1
     print part2
 
-mas :: [String] -> Int
-mas = countBy (== "MAS")
-
-xmas :: [String] -> Int
-xmas = countBy (== "XMAS")
-
-lookAll :: (Ord k) => Map k a -> [k] -> [Maybe a]
-lookAll m cs = [Map.lookup ix m | ix <- cs]
+lookupAll :: (Ord k) => Map k a -> [k] -> [a]
+lookupAll m = mapMaybe (`Map.lookup` m)
 
 xmasLook :: Coord -> Map Coord Char -> Int
 xmasLook c m = do
-    let takes f = take 4 $ iterate f c
-    xmas $
+    let four f = take 4 $ iterate f c
+    count "XMAS" $
         fmap
-            (catMaybes . lookAll m)
-            [ takes above
-            , takes below
-            , takes right
-            , takes left
-            , takes (right . above)
-            , takes (left . above)
-            , takes (right . below)
-            , takes (left . below)
+            (lookupAll m)
+            [ four above
+            , four below
+            , four right
+            , four left
+            , four (right . above)
+            , four (left . above)
+            , four (right . below)
+            , four (left . below)
             ]
 
 masLook :: Coord -> Map Coord Char -> Int
@@ -54,9 +41,9 @@ masLook c m = do
     let upl = left $ above c
     let downl = left $ below c
     let downr = right $ below c
-    mas $
+    count "MAS" $
         fmap
-            (catMaybes . lookAll m)
+            (lookupAll m)
             [ [downl, c, upr]
             , [downr, c, upl]
             , [upr, c, downl]
