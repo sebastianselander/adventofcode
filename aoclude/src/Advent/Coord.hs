@@ -104,9 +104,9 @@ scale :: Int -> Coord -> Coord
 scale n = mapCoord (n *)
 
 -- | Precondition: Non-empty
-coordMatrix :: [[a]] -> Array Coord a
-coordMatrix [] = error "coordMatrix: empty list"
-coordMatrix xs@(x : _) = array (C 0 0, C (length xs) (length x)) $ coordLines xs
+coordArray :: [[a]] -> Array Coord a
+coordArray [] = error "coordMatrix: empty list"
+coordArray xs@(x : _) = array (C 0 0, C (length xs-1) (length x-1)) $ coordLines xs
 
 {- | Given a list of lines pair up each character with
 its position.
