@@ -10,40 +10,37 @@ import Advent.Coord (
  )
 import Advent.Format (format)
 import Advent.Prelude (count)
-import Data.List (nub)
-import Data.Map (Map)
-import Data.Map qualified as Map
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Data.Maybe (fromJust)
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Prelude hiding (Left, Right)
 
 main :: IO ()
 main = do
-    input <- lines <$> [format|2024 6 (%t)*|]
+    input <- [format|2024 6 (%t*%n)*|]
     let grid = Map.fromList $ coordLines input
     let start = findStart grid
-    let walked = Set.map snd $ fromJust $ walk start grid
-    let walled = count Nothing [walk start (Map.insert k 'c' grid) | k <- Map.keys grid]
+    let walked = fromJust $ walk start grid
     print $ Set.size walked
-    print walled
+    print $ count Nothing [walk start (Map.insert k '#' grid) | k <- Set.toList walked]
 
 findStart :: (Ord a) => Map a Char -> a
-findStart m = fromJust $ lookup (Just '^') [(c, k) | k <- Map.keys m, let c = Map.lookup k m]
+findStart m = head [k | k <- Map.keys m, let c = Map.lookup k m, c == Just '^']
 
-data Dir = Up | Down | Left | Right
-    deriving (Show, Eq, Ord)
+data Dir = U | D | L | R
+    deriving (Eq, Ord)
 
-walk :: Coord -> Map Coord Char -> Maybe (Set (Dir, Coord))
-walk start grid = go mempty Up start
+walk :: Coord -> Map Coord Char -> Maybe (Set Coord)
+walk start grid = go mempty U start
   where
     go st dir' pos =
         let
             (newDir, dir) = case dir' of
-                Up -> (Right, above)
-                Down -> (Left, below)
-                Left -> (Up, left)
-                Right -> (Down, right)
+                U -> (R, above)
+                D -> (L, below)
+                L -> (U, left)
+                R -> (D, right)
          in
             if Set.member (dir', pos) st
                 then Nothing
@@ -51,4 +48,4 @@ walk start grid = go mempty Up start
                     Just '.' -> go (Set.insert (dir', pos) st) dir' (dir pos)
                     Just '^' -> go (Set.insert (dir', pos) st) dir' (dir pos)
                     Just '#' -> go st newDir pos
-                    Nothing -> Just $ Set.insert (dir', pos) st
+                    Nothing -> Just $ Set.insert pos $ Set.map snd st
