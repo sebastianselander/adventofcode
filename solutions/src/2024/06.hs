@@ -2,34 +2,33 @@ module Main where
 
 import Advent.Coord (
     Coord,
-    coordArray,
     north,
     turnRight,
  )
-import Advent.Format (format)
-import Advent.Prelude (arrIx, count)
+import Advent.Format (getArrayInput)
+import Advent.Prelude (arrIx, countBy)
 import Data.Array (Array, assocs, (//))
-import Data.Maybe (fromJust)
-import Data.Set (Set)
-import Data.Set qualified as Set
+import Data.List.Extra (nubOrdOn)
+import Data.Set (Set, insert, member, toList)
 
 main :: IO ()
 main = do
-    input <- [format|2024 6 (%t*%n)*|]
-    let grid = coordArray input
+    grid <- getArrayInput 2024 6
     let start = head [k | (k, '^') <- assocs grid]
-    let walked = fromJust $ walk start grid
-    print $ Set.size walked
-    print $ count Nothing [walk start (grid // [(k, '#')]) | k <- Set.toList walked]
+    let walked = nubOrdOn snd $ toList (walk mempty north start grid)
+    print $ length walked
+    print $ countBy null [walk mempty north start (grid // [(k, '#')]) | (_, k) <- walked]
 
-walk :: Coord -> Array Coord Char -> Maybe (Set Coord)
-walk start grid = go mempty north start
-  where
-    go :: Set (Coord, Coord) -> Coord -> Coord -> Maybe (Set Coord)
-    go seen d p =
-        if Set.member (d, p) seen
-            then Nothing
-            else case arrIx grid (d + p) of
-                Nothing -> Just $ Set.insert p $ Set.map snd seen
-                Just '#' -> go seen (turnRight d) p
-                Just _ -> go (Set.insert (d, p) seen) d (d + p)
+walk ::
+    Set (Coord, Coord) ->
+    Coord ->
+    Coord ->
+    Array Coord Char ->
+    Set (Coord, Coord)
+walk visited d p grid =
+    if (d, p) `member` visited
+        then mempty
+        else case arrIx grid (d + p) of
+            Nothing -> insert (d, p) visited
+            Just '#' -> walk visited (turnRight d) p grid
+            Just _ -> walk (insert (d, p) visited) d (d + p) grid
