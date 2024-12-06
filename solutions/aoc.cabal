@@ -17,6 +17,7 @@ common extensions
 
 common day
   hs-source-dirs: src
+  ghc-options: -Wall
   build-depends:
     , aoclude
     , array
