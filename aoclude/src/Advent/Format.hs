@@ -309,7 +309,7 @@ toType = \case
 toParser :: Format -> ExpQ
 toParser = \case
     Empty -> [|return () <?> "<empty>"|]
-    AnyChar -> [|satisfy (const True) <?> "<any char>"|]
+    AnyChar -> [|satisfy (\x -> x /= ' ' && x /= '\n') <?> "<any char>"|]
     Newline -> [|void newline <?> "newline"|]
     String -> [|many1 letter <?> "<letters>"|]
     Symbol -> [|many1 symbol <?> "<symbol>"|]
