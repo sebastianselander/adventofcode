@@ -71,7 +71,6 @@ import Text.Parsec.Expr (
  )
 import Text.Printf (printf)
 import Data.List.Extra (splitOn)
-import Data.Maybe (mapMaybe)
 
 intro :: Q [Dec]
 intro = return []
