@@ -71,6 +71,8 @@ import Text.Parsec.Expr (
  )
 import Text.Printf (printf)
 import Data.List.Extra (splitOn)
+import Advent.Coord (coordArray, Coord)
+import Data.Array (Array)
 
 intro :: Q [Dec]
 intro = return []
@@ -115,6 +117,9 @@ getRawInput year day = do
         then readFile (printf file year day)
         else -- hack work around for repl
             readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year day)
+
+getArrayInput :: Int -> Int -> IO (Array Coord Char)
+getArrayInput year day = coordArray . lines <$> getRawInput year day
 
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`
