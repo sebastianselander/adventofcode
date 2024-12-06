@@ -72,7 +72,6 @@ import Text.Parsec.Expr (
 import Text.Printf (printf)
 import Data.List.Extra (splitOn)
 import Advent.Coord (coordArray, Coord)
-import Data.Array (Array)
 import Data.Array.Base (IArray)
 
 intro :: Q [Dec]
