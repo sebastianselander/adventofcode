@@ -2,16 +2,13 @@ module Main where
 
 import Advent.Coord (
     Coord,
-    above,
-    below,
-    coordLines,
-    left,
-    right,
+    coordArray,
+    north,
+    turnRight,
  )
 import Advent.Format (format)
-import Advent.Prelude (count)
-import Data.Map.Strict (Map)
-import Data.Map.Strict qualified as Map
+import Advent.Prelude (arrIx, count)
+import Data.Array (Array, assocs, (//))
 import Data.Maybe (fromJust)
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -19,33 +16,20 @@ import Data.Set qualified as Set
 main :: IO ()
 main = do
     input <- [format|2024 6 (%t*%n)*|]
-    let grid = Map.fromList $ coordLines input
-    let start = findStart grid
+    let grid = coordArray input
+    let start = head [k | (k, '^') <- assocs grid]
     let walked = fromJust $ walk start grid
     print $ Set.size walked
-    print $ count Nothing [walk start (Map.insert k '#' grid) | k <- Set.toList walked]
+    print $ count Nothing [walk start (grid // [(k, '#')]) | k <- Set.toList walked]
 
-findStart :: (Ord a) => Map a Char -> a
-findStart m = head [k | k <- Map.keys m, let c = Map.lookup k m, c == Just '^']
-
-data Dir = U | D | L | R
-    deriving (Eq, Ord)
-
-walk :: Coord -> Map Coord Char -> Maybe (Set Coord)
-walk start grid = go mempty U start
+walk :: Coord -> Array Coord Char -> Maybe (Set Coord)
+walk start grid = go mempty north start
   where
-    go st dir' pos =
-        let
-            (newDir, dir) = case dir' of
-                U -> (R, above)
-                D -> (L, below)
-                L -> (U, left)
-                R -> (D, right)
-         in
-            if Set.member (dir', pos) st
-                then Nothing
-                else case Map.lookup (dir pos) grid of
-                    Just '.' -> go (Set.insert (dir', pos) st) dir' (dir pos)
-                    Just '^' -> go (Set.insert (dir', pos) st) dir' (dir pos)
-                    Just '#' -> go st newDir pos
-                    Nothing -> Just $ Set.insert pos $ Set.map snd st
+    go :: Set (Coord, Coord) -> Coord -> Coord -> Maybe (Set Coord)
+    go seen d p =
+        if Set.member (d, p) seen
+            then Nothing
+            else case arrIx grid (d + p) of
+                Nothing -> Just $ Set.insert p $ Set.map snd seen
+                Just '#' -> go seen (turnRight d) p
+                Just _ -> go (Set.insert (d, p) seen) d (d + p)

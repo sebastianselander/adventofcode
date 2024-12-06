@@ -5,7 +5,6 @@
 module Advent.Coord where
 
 import Control.Monad.ST (ST, runST, stToIO)
-import Data.Array (Array, array)
 import Data.Array.Base qualified as AB
 import Data.Array.IO.Internals qualified as AB
 import Data.Data (Data)
@@ -15,6 +14,8 @@ import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), 
 import GHC.Generics (Generic)
 import GHC.Ix (Ix (..), indexError)
 import GHC.ST (ST (ST))
+import Data.Array.Base (IArray)
+import Data.Array.IArray (array)
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -104,7 +105,7 @@ scale :: Int -> Coord -> Coord
 scale n = mapCoord (n *)
 
 -- | Precondition: Non-empty
-coordArray :: [[a]] -> Array Coord a
+coordArray :: IArray a e => [[e]] -> a Coord e
 coordArray [] = error "coordMatrix: empty list"
 coordArray xs@(x : _) = array (C 0 0, C (length xs-1) (length x-1)) $ coordLines xs
 
