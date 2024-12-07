@@ -1,6 +1,7 @@
 module Main where
 
 import Advent.Format (format)
+import Advent.Prelude (fixed)
 import Data.List.Extra (find)
 import Data.Maybe (mapMaybe)
 
@@ -21,4 +22,4 @@ calibrate fs (result, y : ys) = find (== result) $ go y ys
         | otherwise = concat [go (f acc x) xs | f <- fs]
 
 cat :: Int -> Int -> Int
-cat n m = read $ show n <> show m
+cat n m = n * fixed (> m) (* 11) 10 + m
