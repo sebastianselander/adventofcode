@@ -141,10 +141,8 @@ apN !n f !x = apN (n - 1) f (f x)
 opPairs :: (a -> b -> c) -> (a, a) -> (b, b) -> (c, c)
 opPairs f (a, aa) (b, bb) = (f a b, f aa bb)
 
-fixed :: (Eq a) => (a -> a) -> a -> a
-fixed f !x = if x == y then x else fixed f y
-  where
-    y = f x
+fixed :: (a -> Bool) -> (a -> a) -> a -> a
+fixed p f !x = if p x then x else fixed p f (f x)
 
 elemOn :: (Eq b, Foldable f) => (a -> b) -> b -> f a -> Bool
 elemOn f e = Foldable.foldr ((||) . (== e) . f) False
