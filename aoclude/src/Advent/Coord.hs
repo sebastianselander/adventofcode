@@ -153,8 +153,7 @@ at the given coordinates. Empty space filled with space characters.
 drawPicture :: Map Coord Char -> String
 drawPicture pixels =
     case boundingBox (keys pixels) of
-        Nothing -> ""
-        Just (C miny minx, C maxy maxx) ->
+        (C miny minx, C maxy maxx) ->
             unlines [[findWithDefault '·' (C y x) pixels | x <- [minx .. maxx]] | y <- [miny .. maxy]]
 
 charToCoord :: Char -> Maybe Coord
@@ -169,13 +168,13 @@ charToCoord = \case
 inclusively contain all the coordinates in a list of
 coordinates.
 -}
-boundingBox :: (Foldable f) => f Coord -> Maybe (Coord, Coord)
+boundingBox :: (Foldable f) => f Coord -> (Coord, Coord)
 boundingBox t =
     case toList t of
-        [] -> Nothing
+        [] -> error "boundingBox: empty list"
         C y x : cs -> go y x y x cs
   where
-    go loy lox hiy hix [] = lo `seq` hi `seq` Just (lo, hi)
+    go loy lox hiy hix [] = lo `seq` hi `seq` (lo, hi)
       where
         lo = C loy lox
         hi = C hiy hix
