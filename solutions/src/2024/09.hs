@@ -1,51 +1,64 @@
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+
 module Main where
 
-import Advent.Format ( format )
-import Data.List (dropWhileEnd)
-import Data.Maybe (isNothing, fromJust, mapMaybe)
-import Data.List.Extra (dropEnd)
-import Data.Sequence qualified as Seq
-import Data.Sequence (Seq(..))
-import Data.Foldable ( Foldable(toList) )
+import Advent.Format (format)
+import Control.Arrow ((&&&))
+import Data.Maybe (catMaybes)
+import Data.Sequence (Seq (..), fromList)
 
 main :: IO ()
 main = do
     input <- [format|2024 9 (%d*)%n|]
-    print $ sum $ zipWith (*) [0 ..] $ smaller $ checksum $ compact 0 input
-    print $ sum $ mapMaybe (\(l,r) -> fmap (l*) r) $ zip [0 ..] $ checksum $ toList $ move $ Seq.fromList $ compact 0 input
+    let p = part1 input
+    print $
+        sum $
+            zipWith (*) [0 ..] $
+                take (length (catMaybes p)) $
+                    uncurry merge1 $
+                        (id &&& reverse) p
+    print $ total 0 $ move $ fromList $ part2 0 input
 
-data Block = N Int Int | Free Int
-    deriving Show
+data Block = File Int Int | Free Int
+    deriving (Show)
+
+total :: Int -> Seq Block -> Int
+total _ Empty = 0
+total n (Free m :<| xs) = total (n + m) xs
+total n (File m c :<| xs) = sum (take m $ map (* c) [n ..]) + total (n + m) xs
+
+part1 :: [Int] -> [Maybe Int]
+part1 xs = go 0 xs
+  where
+    go _ [] = []
+    go !n (file : free : xs) =
+        replicate file (Just n)
+            <> replicate free Nothing
+            <> go (1 + n) xs
+    go !n [file] = replicate file (Just n)
+
+part2 :: Int -> [Int] -> [Block]
+part2 _ [] = []
+part2 n (file : free : xs) = File file n : Free free : part2 (n + 1) xs
+part2 n [x] = [File x n]
+
+merge1 :: [Maybe Int] -> [Maybe Int] -> [Int]
+merge1 [] _ = []
+merge1 _ [] = []
+merge1 (Just x : xs) ys = x : merge1 xs ys
+merge1 (Nothing : xs) (Just y : ys) = y : merge1 xs ys
+merge1 xs (Nothing : ys) = merge1 xs ys
 
 move :: Seq Block -> Seq Block
-move Seq.Empty = Seq.Empty
+move Empty = Empty
 move (xs :|> Free n) = move xs :|> Free n
-move (xs :|> N file c) = case fit xs of
-    Nothing -> move xs :|> N file c
+move (xs :|> File file c) = case fit xs of
+    Nothing -> move xs :|> File file c
     Just new -> move new :|> Free file
   where
     fit :: Seq Block -> Maybe (Seq Block)
-    fit Seq.Empty = Nothing
+    fit Empty = Nothing
     fit (Free n :<| xs)
-      | n >= file = Just (N file c :<| Free (n - file) :<| xs)
-      | otherwise = (Free n :<|) <$> fit xs
+        | n >= file = Just (File file c :<| Free (n - file) :<| xs)
+        | otherwise = (Free n :<|) <$> fit xs
     fit (x :<| xs) = (x :<|) <$> fit xs
-
-
-compact :: Int -> [Int] -> [Block]
-compact _ [] = []
-compact n (file:free:xs) = N file n : Free free : compact (n + 1) xs
-compact n [x] = [N x n]
-
-checksum :: [Block] -> [Maybe Int]
-checksum [] = []
-checksum (Free n : xs) = replicate n Nothing <> checksum xs
-checksum (N m file : xs) = replicate m (Just file) <> checksum xs
-
-smaller :: [Maybe Int] -> [Int]
-smaller [] = []
-smaller (Just n : xs) = n : smaller xs
-smaller (Nothing : xs) = case dropWhileEnd isNothing xs of
-    [] -> []
-    xs -> (fromJust (last xs)) : smaller (dropEnd 1 xs)
-
