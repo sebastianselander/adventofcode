@@ -15,7 +15,7 @@ main = do
         sum $
             zipWith (*) [0 ..] $
                 take (length (catMaybes p)) $
-                    uncurry merge1 $
+                    uncurry merge $
                         (id &&& reverse) p
     print $ total 0 $ move $ fromList $ part2 0 input
 
@@ -42,12 +42,12 @@ part2 _ [] = []
 part2 n (file : free : xs) = File file n : Free free : part2 (n + 1) xs
 part2 n [x] = [File x n]
 
-merge1 :: [Maybe Int] -> [Maybe Int] -> [Int]
-merge1 [] _ = []
-merge1 _ [] = []
-merge1 (Just x : xs) ys = x : merge1 xs ys
-merge1 (Nothing : xs) (Just y : ys) = y : merge1 xs ys
-merge1 xs (Nothing : ys) = merge1 xs ys
+merge :: [Maybe Int] -> [Maybe Int] -> [Int]
+merge [] _ = []
+merge _ [] = []
+merge (Just x : xs) ys = x : merge xs ys
+merge (Nothing : xs) (Just y : ys) = y : merge xs ys
+merge xs (Nothing : ys) = merge xs ys
 
 move :: Seq Block -> Seq Block
 move Empty = Empty
