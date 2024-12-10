@@ -5,6 +5,7 @@ import Advent.Format (format)
 import Advent.Prelude (arrIx)
 import Data.Array (Array, assocs, (!))
 import Data.List.Extra (nubOrd)
+import Data.Bool (bool)
 
 main :: IO ()
 main = do
@@ -15,10 +16,7 @@ main = do
     print $ length $ concat walked
 
 walk :: Array Coord Int -> Coord -> [Coord]
-walk grid s = add $ concatMap (walk grid) (next s)
+walk grid s = bool id (s:) (current == 9) $ concatMap (walk grid) (next s)
   where
-    curr = grid ! s
-    add
-        | curr == 9 = (s :)
-        | otherwise = id
-    next = cardinalOn ((Just (curr + 1) ==) . arrIx grid)
+    current = grid ! s
+    next = cardinalOn ((Just (current + 1) ==) . arrIx grid)
