@@ -4,7 +4,6 @@ import Advent.Format (format)
 import Data.IntMap (IntMap)
 import Data.IntMap qualified as Map
 import Data.IntMap.Strict ((!))
-import Data.Tuple.Extra (both)
 
 main :: IO ()
 main = do
@@ -27,8 +26,8 @@ run m = Map.fromListWith (+) $ concatMap blink (Map.keys m)
 rule :: Int -> Either Int (Int, Int)
 rule 0 = Left 1
 rule n
-    | even len = Right $ both read $ splitAt (len `div` 2) n'
+    | even @Int len = Right (n `div` half, n `mod` half)
     | otherwise = Left (2024 * n)
   where
-    n' = show n
-    len = length n'
+    len = floor @Double $ logBase 10 (fromIntegral n) + 1
+    half = 10 ^ (len `div` 2)
