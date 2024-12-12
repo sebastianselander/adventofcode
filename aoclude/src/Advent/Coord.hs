@@ -11,7 +11,7 @@ import Data.Array.IArray (array)
 import Data.Array.IO.Internals qualified as AB
 import Data.Data (Data)
 import Data.Foldable (toList)
-import Data.Map (Map, findWithDefault, keys)
+import Data.Map (Map, findWithDefault, keys, fromList)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), (+#))
@@ -125,7 +125,7 @@ cardinal :: Coord -> [Coord]
 cardinal = cardinalOn (const True)
 
 cardinalOn :: (Coord -> Bool) -> Coord -> [Coord]
-cardinalOn f !c = [coord | coord <- [above c, left c, below c, right c], f coord]
+cardinalOn f !c = [coord | coord <- [above c, right c, below c, left c], f coord]
 
 neighbors :: Coord -> [Coord]
 neighbors = neighborsOn (const True)
@@ -161,6 +161,11 @@ drawPicture pixels =
     case boundingBox (keys pixels) of
         (C miny minx, C maxy maxx) ->
             unlines [[findWithDefault '·' (C y x) pixels | x <- [minx .. maxx]] | y <- [miny .. maxy]]
+
+draw :: [Coord] -> String
+draw [] = ""
+draw zs = drawPicture (fromList $ fmap (,'#') zs)
+
 
 charToCoord :: Char -> Maybe Coord
 charToCoord = \case
