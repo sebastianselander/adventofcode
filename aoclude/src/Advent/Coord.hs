@@ -5,17 +5,19 @@
 module Advent.Coord where
 
 import Control.Monad.ST (ST, runST, stToIO)
+import Data.Array.Base (IArray)
 import Data.Array.Base qualified as AB
+import Data.Array.IArray (array)
 import Data.Array.IO.Internals qualified as AB
 import Data.Data (Data)
 import Data.Foldable (toList)
 import Data.Map (Map, findWithDefault, keys)
+import Data.Set (Set)
+import Data.Set qualified as Set
 import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), (+#))
 import GHC.Generics (Generic)
 import GHC.Ix (Ix (..), indexError)
 import GHC.ST (ST (ST))
-import Data.Array.Base (IArray)
-import Data.Array.IArray (array)
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -74,6 +76,10 @@ euclidean c1 c2 = pyth (c1 - c2)
   where
     pyth (C l r) = sqrt (fromIntegral (l * l + r * r))
 
+perimeter :: Set Coord -> [(Coord, Coord)]
+perimeter s | Set.null s = []
+perimeter coords = [(c, c - cx) | c <- toList coords, cx <- cardinalOn (`Set.notMember` coords) c]
+
 origin :: Coord
 origin = C 0 0
 
@@ -105,9 +111,9 @@ scale :: Int -> Coord -> Coord
 scale n = mapCoord (n *)
 
 -- | Precondition: Non-empty
-coordArray :: IArray a e => [[e]] -> a Coord e
+coordArray :: (IArray a e) => [[e]] -> a Coord e
 coordArray [] = error "coordMatrix: empty list"
-coordArray xs@(x : _) = array (C 0 0, C (length xs-1) (length x-1)) $ coordLines xs
+coordArray xs@(x : _) = array (C 0 0, C (length xs - 1) (length x - 1)) $ coordLines xs
 
 {- | Given a list of lines pair up each character with
 its position.
