@@ -123,7 +123,7 @@ getArrayInput year day = coordArray . lines <$> getRawInput year day
 
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`
-%u - parse any unsigned integeger, not prefixed by +
+%u - parse any unsigned integer, not prefixed by +
 %d - parse any single digit
 %n - parse a newline
 %c - parse any lower-case, upper-case or
