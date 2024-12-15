@@ -8,7 +8,7 @@ module Advent.Format where
 
 import Control.Arrow ((>>>))
 import Control.Monad (forM, replicateM, void, (<=<))
-import Data.Char (digitToInt, isUpper)
+import Data.Char ( digitToInt, isUpper, isSpace )
 import Data.Data (Data, Typeable)
 import Data.Function (on)
 import Data.Functor (($>))
@@ -50,6 +50,7 @@ import Text.Parsec (
     many,
     many1,
     newline,
+    satisfy,
     noneOf,
     oneOf,
     option,
@@ -58,7 +59,6 @@ import Text.Parsec (
     parse,
     sepBy,
     string,
-    satisfy,
     try,
     (<?>),
     (<|>),
@@ -85,7 +85,6 @@ data Format
     | Char
     | Newline
     | Symbol
-    | AnyChar
     | String
     | Optional !Format
     | At !String
@@ -266,7 +265,6 @@ toType = \case
     Newline -> [t|()|]
     Unsigned -> [t|Int|]
     Symbol -> [t|Char|]
-    AnyChar -> [t|Char|]
     Signed -> [t|Int|]
     Digit -> [t|Int|]
     String -> [t|String|]
@@ -313,9 +311,8 @@ toType = \case
 toParser :: Format -> ExpQ
 toParser = \case
     Empty -> [|return () <?> "<empty>"|]
-    AnyChar -> [|satisfy (\x -> x /= ' ' && x /= '\n') <?> "<any char>"|]
     Newline -> [|void newline <?> "newline"|]
-    String -> [|many1 letter <?> "<letters>"|]
+    String -> [|many1 (satisfy (not . isSpace)) <?> "<letters>"|]
     Symbol -> [|many1 symbol <?> "<symbol>"|]
     Unsigned -> [|unsigned <?> "unsigned"|]
     Signed -> [|signed <?> "signed"|]
@@ -374,7 +371,6 @@ interesting = \case
     Literal{} -> False
     Newline -> False
     Signed -> True
-    AnyChar -> True
     Digit -> True
     Symbol -> True
     Unsigned -> True
@@ -400,7 +396,7 @@ gather p = do
     return (parStr, res)
 
 symbol :: Parser Char
-symbol = oneOf "!@#$%^&*_+=|'\";:"
+symbol = oneOf ".!@#$%^&*_+=|'\";:"
 
 decimal :: [Int] -> Int
 decimal = foldl' (\acc -> ((10 * acc) +)) 0
@@ -655,7 +651,6 @@ atom =
                 , char 'n' $> Newline
                 , char 'u' $> Unsigned
                 , char 'y' $> Symbol
-                , char 't' $> AnyChar
                 ]
         , char '@' *> (At <$> many1 letter)
         , Literal <$> (char '\\' *> fmap (: []) anyChar)
