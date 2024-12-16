@@ -93,3 +93,7 @@ executable 2024-14
 executable 2024-15
   import: day, extensions
   main-is: 2024/15.hs
+
+executable 2024-16
+  import: day, extensions
+  main-is: 2024/16.hs
