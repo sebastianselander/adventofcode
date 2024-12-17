@@ -6,15 +6,17 @@ import Data.Bits (xor)
 
 main :: IO ()
 main = do
-    (a, instrs') <-
+    (rega, instrs') <-
         [format|2024 17 Register A: %u%nRegister B: (~%u)%nRegister C: (~%u)%n%nProgram: %i&,%n|]
     let instructions = array (0 :: Int, length instrs' - 1) (zip [0 ..] instrs')
+    let fth5 (_, _, _, _, e) = e
+    let fst5 (a, _, _, _, _) = a
     print $
         reverse $
-            (\(_, _, _, _, xs) -> xs) $
+            fth5 $
                 head $
-                    dropWhile (\(p, _, _, _, _) -> p < 15) $
-                        iterate (step instructions) (0, a, 0, 0, [])
+                    dropWhile ((< 15) . fst5) $
+                        iterate (step instructions) (0, rega, 0, 0, [])
     print $
         minimum
             (part2 instructions (snd (bounds instructions)) (filter ((== 0) . getb) [1 .. 7]))
