@@ -1,8 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
 {-# HLINT ignore "Use camelCase" #-}
 
 module Main where
@@ -12,16 +9,13 @@ import Control.Monad.State (MonadState, State, execState, get, gets, modify)
 import Data.Array (Array, array, bounds, inRange, (!))
 import Data.Bits (xor)
 import Data.Function (fix)
-import Debug.Trace (traceShowId)
 
 main :: IO ()
 main = do
     (a, _, _, instrs') <- [format|2024 17 Register A: %u%nRegister B: %u%nRegister C: %u%n%nProgram: %i&,%n|]
     let instrs = array (0 :: Int, length instrs' - 1) (zip [0 ..] instrs')
     print $ runInterpreter (initProgram instrs a)
-
-initProgram :: Array Int Int -> Int -> Program
-initProgram instructions a = Program instructions a 0 0 0 []
+    print $ runInterpreter (initProgram instrs $ minimum (part2 instrs 16 [6]))
 
 data Program = Program
     { _instructions :: Array Int Int
@@ -32,6 +26,9 @@ data Program = Program
     , _out :: [Int]
     }
     deriving (Show)
+
+initProgram :: Array Int Int -> Int -> Program
+initProgram instructions a = Program instructions a 0 0 0 []
 
 op_instruction :: State Program (Int, Int)
 op_instruction = do
@@ -64,7 +61,7 @@ runInterpreter program = reverse $ _out $ flip execState program $ do
     fix $ \loop -> do
         ptr <- gets _pointer
         is <- gets _instructions
-        if not (inRange (bounds is) ptr) 
+        if not (inRange (bounds is) ptr)
             then pure ()
             else do
                 interpret
@@ -72,7 +69,7 @@ runInterpreter program = reverse $ _out $ flip execState program $ do
 
 interpret :: State Program ()
 interpret = do
-    (i, o) <- traceShowId <$> op_instruction
+    (i, o) <- op_instruction
     case i of
         0 -> do
             a <- reg_a
@@ -120,3 +117,17 @@ combo 4 = reg_a
 combo 5 = reg_b
 combo 6 = reg_c
 combo _ = error "combo: bad input"
+
+range :: Int -> [Int]
+range n = [8 * n .. 8 * n + 7]
+
+part2 :: Array Int Int -> Int -> [Int] -> [Int]
+part2 _ 0 xs = xs
+part2 arr n xs = part2 arr (n - 1) $ concatMap (filter ((== arr ! (n - 1)) . getb) . range) xs
+
+getb :: Int -> Int
+getb a =
+    let b = (a `mod` 8) `xor` 3
+        c = a `div` (2 ^ b)
+        b' = b `xor` 5
+     in (b' `xor` c) `mod` 8
