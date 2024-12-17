@@ -13,9 +13,10 @@ import Data.Function (fix)
 main :: IO ()
 main = do
     (a, _, _, instrs') <- [format|2024 17 Register A: %u%nRegister B: %u%nRegister C: %u%n%nProgram: %i&,%n|]
-    let instrs = array (0 :: Int, length instrs' - 1) (zip [0 ..] instrs')
-    print $ runInterpreter (initProgram instrs a)
-    print $ runInterpreter (initProgram instrs $ minimum (part2 instrs 16 [6]))
+    let instructions = array (0 :: Int, length instrs' - 1) (zip [0 ..] instrs')
+    let start = filter ((==0) . getb) [1..7]
+    print $ runInterpreter (initProgram instructions a)
+    print $ minimum (part2 instructions (snd (bounds instructions)) start)
 
 data Program = Program
     { _instructions :: Array Int Int
