@@ -1,28 +1,26 @@
 module Main where
 
-import Advent.Coord (Coord (..), cardinal, contains, turnAround)
+import Advent.Coord (Coord (..), cardinal, contains)
 import Advent.Format (format)
 import Algorithm.Search (bfs)
-import Data.List (findIndex, inits, intercalate)
+import Data.List (findIndex, inits)
 import Data.Maybe (fromJust, isNothing)
 import Data.Set (Set, fromList, notMember)
 import Data.Tuple.Extra (swap)
 
 main :: IO ()
 main = do
-    input <- fmap (uncurry C . swap) <$> [format|2024 18 (%u,%u%n)*|]
-    print $ length $ fromJust $ path (C 0 0) (fromList $ take 1024 input)
+    input <- [format|2024 18 (%u,%u%n)*|]
+    let coords = uncurry C . swap <$> input
+    print $ length $ fromJust $ path (C 0 0) (fromList $ take 1024 coords)
     putStrLn $
-        intercalate "," $
-            (\(C r c) -> [show c, show r]) $
-                abs $
-                    turnAround $
-                        input
-                            !! pred
-                                ( fromJust $
-                                    findIndex isNothing $
-                                        fmap (path (C 0 0) . fromList) (inits input)
-                                )
+        (\(x, y) -> show x <> "," <> show y) $
+            input
+                !! pred
+                    ( fromJust $
+                        findIndex isNothing $
+                            fmap (path (C 0 0) . fromList) (inits coords)
+                    )
 
 box :: (Coord, Coord)
 box = (C 0 0, C 70 70)
