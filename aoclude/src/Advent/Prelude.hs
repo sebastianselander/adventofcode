@@ -194,3 +194,11 @@ combinations _ [] = []
 combinations k (x : xs)
     | k > length (x : xs) = []
     | otherwise = map (x :) (combinations (k - 1) xs) ++ combinations k xs
+
+binarySearch :: (Integral a, Num a) => a -> (a -> Bool) -> a -> a -> a
+binarySearch e p lo hi 
+  | lo > hi = lo
+  | p e = binarySearch e p (mi+1) hi
+  | otherwise = binarySearch e p lo mi
+  where
+    mi = (lo + hi) `div` 2
