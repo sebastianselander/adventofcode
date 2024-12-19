@@ -4,15 +4,18 @@ module Main where
 
 import Advent.Format (format, intro)
 import Data.Maybe (catMaybes)
+import Text.Parsec (satisfy)
 
 data Enabled = Enabled_don't_LPAREN_RPAREN | Enabled_do_LPAREN_RPAREN 
     deriving (Show)
 
 intro
 
+t = satisfy (const True)
+
 main :: IO ()
 main = do
-    input <- [format|2024 3 (mul\(%i,%i\)|@Enabled|~%t)*|]
+    input <- [format|2024 3 (mul\(%i,%i\)|@Enabled|~@t)*|]
     print $ eval True True input
     print $ eval True False input
 
