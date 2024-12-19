@@ -2,7 +2,8 @@ module Main where
 
 import Advent.Format (format)
 import Advent.Prelude (countBy)
-import Data.List (isPrefixOf)
+import Data.List (stripPrefix)
+import Data.Maybe (mapMaybe)
 import Data.MemoTrie (memo2)
 
 main :: IO ()
@@ -17,4 +18,4 @@ dp = memo2 go
   where
     go available want = countBy null next + sum (fmap (dp available) next)
       where
-        next = [drop (length av) want | av <- available, av `isPrefixOf` want]
+        next = mapMaybe (`stripPrefix` want) available
