@@ -128,7 +128,7 @@ getArrayInput year day = coordArray . lines <$> getRawInput year day
 %c - parse any lower-case, upper-case or
      title-case unicode plus letters according to isAlpha
 %s - like char, but for strings
-%y - parse one of `!@#$%^&*_+=|'\`
+%y - parse a word (no space characters)
 <fmt>! - save the result of as a string <fmt>
 <fmt>? - zero or one
 <fmt>* - zero or many
@@ -312,8 +312,8 @@ toParser :: Format -> ExpQ
 toParser = \case
     Empty -> [|return () <?> "<empty>"|]
     Newline -> [|void newline <?> "newline"|]
-    String -> [|many1 (satisfy (not . isSpace)) <?> "<letters>"|]
-    Symbol -> [|many1 symbol <?> "<symbol>"|]
+    String -> [|many1 letter <?> "<letters>"|]
+    Symbol -> [|many1 (satisfy (not . isSpace)) <?> "<symbol>"|]
     Unsigned -> [|unsigned <?> "unsigned"|]
     Signed -> [|signed <?> "signed"|]
     Digit -> [|digitToInt <$> digit <?> "digit"|]
