@@ -8,14 +8,10 @@ import Data.MemoTrie (memo2)
 
 main :: IO ()
 main = do
-    (colors, onsens) <- [format|2024 19 %s&(, )%n%n(%s%n)*|]
-    let combinations = fmap (dp colors) onsens
+    (patterns, designs) <- [format|2024 19 %s&(, )%n%n(%s%n)*|]
+    let dp = memo2 go
+        go _ "" = 1 :: Int
+        go p d = sum (fmap (dp p) (mapMaybe (`stripPrefix` d) p))
+        combinations = fmap (dp patterns) designs
     print $ countBy (> 0) combinations
     print $ sum combinations
-
-dp :: [String] -> String -> Int
-dp = memo2 go
-  where
-    go available want = countBy null next + sum (fmap (dp available) next)
-      where
-        next = mapMaybe (`stripPrefix` want) available
