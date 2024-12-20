@@ -2,7 +2,6 @@ module Main where
 
 import Advent.Coord (
     Coord,
-    boundingBox,
     cardinal,
     coordLines,
     manhattan,
@@ -23,7 +22,7 @@ main = do
         costsFromStart = distanceMap s grid
         reachable n v =
             [ (s', manhattan v s')
-            | s' <- range (boundingBox (Map.keys grid))
+            | s' <- range (v - 20, v + 20)
             , manhattan v s' <= n
             , Just '.' <- pure (Map.lookup s' grid)
             ]
