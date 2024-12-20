@@ -1,6 +1,12 @@
 module Main where
 
-import Advent.Coord
+import Advent.Coord (
+    Coord,
+    boundingBox,
+    cardinal,
+    coordLines,
+    manhattan,
+ )
 import Advent.Format (format)
 import Advent.Queue (Queue (..))
 import Advent.Queue qualified as Queue
@@ -15,27 +21,31 @@ main = do
     let e = head [x | (x, 'E') <- Map.assocs input]
     let grid = foldr (uncurry Map.insert) input [(s, '.'), (e, '.')]
     let box = boundingBox (Map.keys grid)
-    let costNoCheat = costs s grid ! e
+    let costNoCheat = buildGraph s grid ! e
     let reachable n v =
             [ (s', manhattan v s')
             | s' <- range box
             , manhattan v s' <= n
-            , Just '.' <- [Map.lookup s' grid]
+            , Just '.' <- pure (Map.lookup s' grid)
             ]
-    let costFromEnd = costs e grid
-    let costFromStart = costs s grid
+    let costFromEnd = buildGraph e grid
+    let costFromStart = buildGraph s grid
     let savings n v =
-            [ best
+            [ ()
             | (rs, dist) <- reachable n v
-            , let best = costNoCheat - ((costFromStart ! v) + (costFromEnd ! rs) + dist)
-            , best >= 100
+            , (costNoCheat - ((costFromStart ! v) + (costFromEnd ! rs) + dist)) >= 100
             ]
-    let solve n = length (concat [savings n k | k <- Map.keys grid, Just '.' <- [Map.lookup k grid]])
+    let solve n =
+            sum
+                [ length (savings n k)
+                | k <- Map.keys grid
+                , Just '.' <- pure (Map.lookup k grid)
+                ]
     print $ solve 2
     print $ solve 20
 
-costs :: Coord -> Map Coord Char -> Map Coord Int
-costs s grid = bfs mempty $ Queue.fromList [(s, 0)]
+buildGraph :: Coord -> Map Coord Char -> Map Coord Int
+buildGraph start grid = bfs mempty $ Queue.fromList [(start, 0)]
   where
     bfs _ Queue.Empty = mempty
     bfs visited ((curr, cost) :<| q)
