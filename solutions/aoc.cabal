@@ -110,3 +110,8 @@ executable 2024-19
   import: day, extensions
   build-depends: MemoTrie
   main-is: 2024/19.hs
+
+executable 2024-20
+  import: day, extensions
+  build-depends: MemoTrie
+  main-is: 2024/20.hs
