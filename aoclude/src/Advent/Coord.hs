@@ -1,6 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE UnboxedTuples #-}
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Advent.Coord where
 
@@ -18,6 +20,7 @@ import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), 
 import GHC.Generics (Generic)
 import GHC.Ix (Ix (..), indexError)
 import GHC.ST (ST (ST))
+import Data.MemoTrie
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -166,6 +169,14 @@ draw :: [Coord] -> String
 draw [] = ""
 draw zs = drawPicture (fromList $ fmap (,'#') zs)
 
+coordToChar :: Coord -> Maybe Char
+coordToChar x
+    | x == north = Just '^'
+    | x == west = Just '<'
+    | x == east = Just '>'
+    | x == south = Just 'v'
+    | otherwise = Nothing
+
 
 charToCoord :: Char -> Maybe Coord
 charToCoord = \case
@@ -198,6 +209,12 @@ instance Num Coord where
     abs = mapCoord abs
     signum = mapCoord signum
     fromInteger = (\i -> C i i) . fromInteger
+
+instance HasTrie Coord where
+  newtype Coord :->: a = CT (Int :->: Int :->: a)
+  trie f = CT (trie \y -> trie (f . C y))
+  CT t `untrie` C y x = t `untrie` y `untrie` x
+  enumerate (CT t) = [(C y x, a) | (y, xs) <- enumerate t, (x, a) <- enumerate xs]
 
 instance Show Coord where
     show (C row col) = "(" ++ show row ++ ", " ++ show col ++ ")"
