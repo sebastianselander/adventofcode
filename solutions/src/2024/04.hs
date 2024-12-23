@@ -1,12 +1,10 @@
 module Main where
 
-import Advent.Coord (Coord, above, below, coordArray, coordLines, left, right)
+import Advent.Coord (Coord, above, below, coordArray, left, ne, nw, right, se, sw)
 import Advent.Format (format)
-import Advent.Prelude (count, countBy)
+import Advent.Prelude (count)
 import Data.Array (Array, Ix, indices, (!))
 import Data.Array.Base ((!?))
-import Data.Map (Map)
-import Data.Map qualified as Map
 import Data.Maybe (mapMaybe)
 
 main :: IO ()
@@ -33,10 +31,10 @@ xmasLook c m
                     , four below
                     , four right
                     , four left
-                    , four (right . above)
-                    , four (left . above)
-                    , four (right . below)
-                    , four (left . below)
+                    , four (+ ne)
+                    , four (+ nw)
+                    , four (+ se)
+                    , four (+ sw)
                     ]
 
 masLook :: Coord -> Array Coord Char -> Int
