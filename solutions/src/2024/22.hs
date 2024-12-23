@@ -1,47 +1,34 @@
 module Main where
 
-import Advent.Format (format, format')
+import Advent.Format (format)
 import Advent.Prelude (apN)
 import Data.Bits (xor)
-import Data.List (sort)
-import Data.List.Extra (nubOrd)
-import Data.Map (Map)
-import Data.Map qualified as Map
-import Data.Maybe (fromMaybe)
-import Debug.Trace
+import Data.Map.Strict (Map, elems, fromListWith, unionsWith)
 
 main :: IO ()
 main = do
     input <- [format|2024 22 (%u%n)*|]
-    print $ sum $ fmap p1 input
-    let fixed = fmap pair input
-    print $ maximum (Map.elems (Map.unionsWith (+) fixed))
-
-p1 :: Int -> Int
-p1 = apN 2000 sec
+    print $ foldr ((+) . apN 2000 secret) 0 input
+    print $ maximum (elems (unionsWith (+) (fmap pair input)))
 
 bananas :: Int -> [Int]
-bananas n = fmap (`mod` 10) $ take 2000 $ iterate sec n
+bananas n = fmap (`mod` 10) $ take 2000 $ iterate secret n
 
 pair :: Int -> Map (Int, Int, Int, Int) Int
-pair n = Map.fromListWith (\ _ x -> x) $ zip s (drop 4 b)
+pair n = fromListWith (\_ x -> x) $ zip s (drop 4 b)
   where
     b = bananas n
-    s = seqs $ diffs b
+    s = changes $ zipWith (-) (tail b) b
 
-seqs :: [Int] -> [(Int, Int, Int, Int)]
-seqs (a : b : c : d : xs) = (a, b, c, d) : seqs (b : c : d : xs)
-seqs _ = []
+changes :: [Int] -> [(Int, Int, Int, Int)]
+changes (a : b : c : d : xs) = (a, b, c, d) : changes (b : c : d : xs)
+changes _ = []
 
-diffs :: [Int] -> [Int]
-diffs secs = zipWith (-) (tail secs) secs
+prune :: Int -> Int
+prune = (`mod` 16777216)
 
-modn :: Int
-modn = 16777216
-
-sec :: Int -> Int
-sec x =
-    let a = ((x * 64) `xor` x) `mod` modn
-        b = ((a `div` 32) `xor` a) `mod` modn
-        c = ((b * 2048) `xor` b) `mod` modn
-     in c
+secret :: Int -> Int
+secret x =
+    let a = prune (x * 64 `xor` x)
+        b = prune (a `div` 32 `xor` a)
+     in prune (b * 2048 `xor` b)
