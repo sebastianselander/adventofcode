@@ -1,25 +1,29 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude (count)
 import Data.Algorithm.MaximalCliques (getMaximalCliques)
-import Data.List (intercalate, maximumBy, sort)
+import Data.List (intercalate, maximumBy)
 import Data.List.Extra (nubOrd)
-import Data.Map qualified as Map
+import Data.Map.Strict ((!), insertWith, keys)
 import Data.Ord (comparing)
+import Data.Set (fromList)
 
 main :: IO ()
 main = do
-    input <- [format|2024 23 (%s-%s%n)*|]
-    let g = foldr (\(l, r) acc -> Map.insertWith (++) l [r] 
-                                 $ Map.insertWith (++) r [l] acc) mempty input
-    let three k = nubOrd [ sort [k, ns, ns'] 
-                         | let neighbors = (g Map.!)
-                         , ns <- neighbors k
-                         , ns' <- neighbors ns
-                         , ns'' <- neighbors ns'
-                         , ns'' == k ]
-    print $ count True $ fmap (any (\(x : _) -> x == 't')) 
-            $ nubOrd $ concat [sort (three k) | k <- Map.keys g]
-    putStrLn $ intercalate "," $ sort $ 
-        maximumBy (comparing length) (getMaximalCliques (\l r -> r `elem` g Map.! l) (Map.keys g))
+    g <-
+        foldr (\(l, r) acc -> insertWith (++) l [r] $ insertWith (++) r [l] acc) mempty
+            <$> [format|2024 23 (%s-%s%n)*|]
+    let three k =
+            [ fromList [k, k', k'']
+            | let neighbors = (g !)
+            , k'@(x : _) <- neighbors k
+            , k''@(y : _) <- neighbors k'
+            , k'''@(z : _) <- neighbors k''
+            , k''' == k
+            , 't' `elem` [x, y, z]
+            ]
+    print $ length $ nubOrd $ concatMap three (keys g)
+    putStrLn $
+        intercalate "," $
+                maximumBy (comparing length) $
+                    getMaximalCliques (\l -> elem l . (g !)) (keys g)
