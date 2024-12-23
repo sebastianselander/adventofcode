@@ -2,7 +2,7 @@ module Main where
 
 import Advent.Format (format)
 import Advent.Prelude (count)
-import Data.Algorithm.MaximalCliques
+import Data.Algorithm.MaximalCliques (getMaximalCliques)
 import Data.List (intercalate, maximumBy, sort)
 import Data.List.Extra (nubOrd)
 import Data.Map qualified as Map
