@@ -123,3 +123,8 @@ executable 2024-21
 executable 2024-22
   import: day, extensions
   main-is: 2024/22.hs
+
+executable 2024-23
+  import: day, extensions
+  build-depends: maximal-cliques
+  main-is: 2024/23.hs
