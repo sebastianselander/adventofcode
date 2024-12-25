@@ -49,6 +49,7 @@ import Text.Parsec (
     letter,
     many,
     many1,
+    alphaNum,
     newline,
     satisfy,
     noneOf,
@@ -312,7 +313,7 @@ toParser :: Format -> ExpQ
 toParser = \case
     Empty -> [|return () <?> "<empty>"|]
     Newline -> [|void newline <?> "newline"|]
-    String -> [|many1 letter <?> "<letters>"|]
+    String -> [|many1 alphaNum <?> "<letters>"|]
     Symbol -> [|many1 (satisfy (not . isSpace)) <?> "<symbol>"|]
     Unsigned -> [|unsigned <?> "unsigned"|]
     Signed -> [|signed <?> "signed"|]
