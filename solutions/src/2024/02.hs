@@ -13,8 +13,6 @@ main = do
     print $ count True $ fmap (any safe . deletes 1) input
 
 safe :: [Int] -> Bool
-safe xs =
-    (byPair (<) xs || byPair (>) xs)
-        && byPair ((`elem` [1 .. 3]) . abs .: (-)) xs
+safe xs = all (any ($ xs)) [[byPair (<), byPair (>)], [byPair ((`elem` [1 .. 3]) . abs .: (-))]]
   where
-    byPair f xs = and [f x y | x <- xs | y <- drop 1 xs]
+    byPair f xs = and $ zipWith f xs (tail xs) 
