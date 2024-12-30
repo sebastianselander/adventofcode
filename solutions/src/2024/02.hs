@@ -3,7 +3,7 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude (count, deletes, safeTail)
+import Advent.Prelude (count, deletes)
 import Data.Composition ((.:))
 
 main :: IO ()
@@ -17,4 +17,4 @@ safe xs =
     (byPair (<) xs || byPair (>) xs)
         && byPair ((`elem` [1 .. 3]) . abs .: (-)) xs
   where
-    byPair f xs = and [f x y | x <- xs | y <- safeTail xs]
+    byPair f xs = and [f x y | x <- xs | y <- drop 1 xs]

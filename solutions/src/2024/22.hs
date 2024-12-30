@@ -1,14 +1,14 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude (apN)
+import Advent.Prelude (times)
 import Data.Bits (xor)
 import Data.Map.Strict (Map, elems, fromListWith, unionsWith)
 
 main :: IO ()
 main = do
     input <- [format|2024 22 (%u%n)*|]
-    print $ foldr ((+) . apN 2000 secret) 0 input
+    print $ foldr ((+) . times 2000 secret) 0 input
     print $ maximum (elems (unionsWith (+) (fmap pair input)))
 
 bananas :: Int -> [Int]

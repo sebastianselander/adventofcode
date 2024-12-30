@@ -136,9 +136,10 @@ findIndicesElem p = Prelude.reverse . fst . Data.List.foldl' go ([], 0)
         | p x = ((x, n) : l, n + 1)
         | otherwise = (l, n + 1)
 
-apN :: Int -> (a -> a) -> a -> a
-apN 0 _ !x = x
-apN !n f !x = apN (n - 1) f (f x)
+times :: Int -> (a -> a) -> a -> a
+times n f !x
+    | n <= 0 = x
+    | otherwise = times (n - 1) f (f x)
 
 opPairs :: (a -> b -> c) -> (a, a) -> (b, b) -> (c, c)
 opPairs f (a, aa) (b, bb) = (f a b, f aa bb)

@@ -14,7 +14,7 @@ import Data.Map qualified as Map
 
 main :: IO ()
 main = do
-    (input, moves') <- [format|2024 15 (%s%n)*%n(%s%n)*|]
+    (input, moves') <- [format|2024 15 (%y%n)*%n(%y%n)*|]
     let Just moves = mapM charToCoord (concat moves')
     print $
         sum

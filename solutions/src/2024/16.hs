@@ -18,7 +18,7 @@ import Data.Set qualified as Set
 
 main :: IO ()
 main = do
-    input <- coordLines <$> [format|2024 16 (%s%n)*|]
+    input <- coordLines <$> [format|2024 16 (%y%n)*|]
     let s = head [c | (c, 'S') <- input]
     let e = head [c | (c, 'E') <- input]
     let graph =
