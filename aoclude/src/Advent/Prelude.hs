@@ -10,7 +10,14 @@ import Data.Foldable (toList)
 import Data.Foldable qualified as Foldable
 import Data.IntMap (IntMap)
 import Data.IntMap qualified as IntMap
-import Data.List
+import Data.List (
+    elemIndex,
+    foldl',
+    inits,
+    mapAccumL,
+    sortBy,
+    tails,
+ )
 import Data.Map (Map)
 import Data.Map qualified
 import Data.Maybe (fromJust)
@@ -28,11 +35,6 @@ byOrder xs y z = compare (fromJust $ elemIndex y xs) (fromJust $ elemIndex z xs)
 
 slidingWindows :: forall a. Int -> [a] -> [[a]]
 slidingWindows n l = Prelude.take n <$> Data.List.tails l
-
-toTuple :: forall a f. (Foldable f) => f a -> (a, a)
-toTuple xs = case Foldable.toList xs of
-    [l, r] -> (l, r)
-    _ -> error "ERROR: more than two elements"
 
 -- | Returns a map of frequencies of elements
 counts :: (Foldable f, Ord a) => f a -> Map a Int
@@ -147,10 +149,6 @@ fixed p f !x = if p x then x else fixed p f (f x)
 elemOn :: (Eq b, Foldable f) => (a -> b) -> b -> f a -> Bool
 elemOn f e = Foldable.foldr ((||) . (== e) . f) False
 
-safeTail :: [a] -> [a]
-safeTail [] = []
-safeTail xs = drop 1 xs
-
 count :: (Foldable f, Eq a) => a -> f a -> Int
 count = countBy . (==)
 
@@ -174,17 +172,7 @@ powerset :: (Eq a) => [a] -> [[a]]
 powerset [] = [[]]
 powerset (x : xs) = [x : ps | ps <- powerset xs] <> powerset xs
 
--- | Generate a range inclusive in the lower bound, exclusive in the upper bound
-(...) :: (Num a, Enum a) => a -> a -> [a]
-(...) a b = [a .. b - 1]
-
-{- | Generate a range inclusive in the lower bound, inclusive in the upper bound
-equivalent to `[a .. b]`
--}
-(..=) :: (Num a, Enum a) => a -> a -> [a]
-(..=) a b = [a .. b]
-
--- Generate all sublists of at least length n using laziness
+-- Generate all sublists of at least length n
 deletes :: Int -> [a] -> [[a]]
 deletes n xs = foldMap (`combinations` xs) [length xs - n .. length xs]
 
@@ -195,10 +183,10 @@ combinations k (x : xs)
     | k > length (x : xs) = []
     | otherwise = map (x :) (combinations (k - 1) xs) ++ combinations k xs
 
-binarySearch :: (Integral a, Num a) => a -> (a -> Bool) -> a -> a -> a
-binarySearch e p lo hi 
-  | lo > hi = lo
-  | p e = binarySearch e p (mi+1) hi
-  | otherwise = binarySearch e p lo mi
+binarySearch :: (Integral a) => a -> (a -> Bool) -> a -> a -> a
+binarySearch e p lo hi
+    | lo > hi = lo
+    | p e = binarySearch e p (mi + 1) hi
+    | otherwise = binarySearch e p lo mi
   where
     mi = (lo + hi) `div` 2
