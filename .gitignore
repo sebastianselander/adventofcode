@@ -1,3 +1,6 @@
 .direnv
 dist-newstyle
 tags
+solutions/src/2015/__pycache__
+cookies.txt
+cookie

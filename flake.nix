@@ -29,6 +29,8 @@
               blas
               lapack
               lua
+              (python3.withPackages (p: with p; [ networkx ]))
+              pypy310
             ];
           };
         };
