@@ -13,9 +13,12 @@ if [ -z $YEAR ] || [ -z $DAY ]; then
 fi
 if [ 1 -eq ${#DAY} ]; then
     DAY_OUTPUT="0$DAY"
+else
+    DAY_OUTPUT=$DAY
 fi
 
-INPUT_PATH="/home/sebastian/Documents/git/adventofcode/inputs/$YEAR/$DAY_OUTPUT.txt"
+OUTPUT_PATH="/home/sebastian/Documents/git/adventofcode/inputs/$YEAR/$DAY_OUTPUT.txt"
 
-curl --cookie cookie https://adventofcode.com/$YEAR/day/$DAY/input > $INPUT_PATH
-bat $INPUT_PATH | tail
+curl --cookie cookie https://adventofcode.com/$YEAR/day/$DAY/input > $OUTPUT_PATH
+echo $OUTPUT_PATH
+bat $OUTPUT_PATH | tail

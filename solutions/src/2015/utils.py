@@ -3,7 +3,8 @@ import re
 def readfile(year,day):
     year = str(year)
     day = "0" if day < 10 else "" + str(day)
-    with open("inputs/" + year +"/" + day + ".txt") as f:
+    path = "inputs/" + year +"/" + day + ".txt"
+    with open(path) as f:
         return f.read().strip()
 
 def nums(x):
