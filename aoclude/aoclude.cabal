@@ -28,6 +28,7 @@ library
     Advent.Nat
     Advent.ReadS
     Advent.Flow
+    Advent.Search
 
   build-depends:
     , base
