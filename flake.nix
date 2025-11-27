@@ -8,19 +8,13 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        haskell-packages = nixpkgs.legacyPackages.${system}.haskell.packages;
-        ghcVersion = "966";
         pkgs = import nixpkgs { inherit system; };
       in {
-        packages = {
-          default =
-            haskell-packages.${ghcVersion}.developPackage { root = ./.; };
-        };
         devShells = {
           default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
-              ghc
-              haskell-language-server
+              haskell.compiler.ghc912
+              (haskell-language-server.override {supportedGhcVersions = [ "912"];})
               haskellPackages.cabal-install
               haskellPackages.fourmolu
               haskellPackages.ghcid
@@ -28,9 +22,6 @@
               zlib
               blas
               lapack
-              lua
-              (python3.withPackages (p: with p; [ networkx ]))
-              pypy310
             ];
           };
         };
