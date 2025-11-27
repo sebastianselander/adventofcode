@@ -80,11 +80,10 @@ uniqueAssignment m =
 >>> fromDigits 10 [1,2,3,4]
 1234
 
->>> fromDigits 2 [12]
-12
+>>> fromDigits 2 [1,0,1,1]
+11
 
->>> fromDigits 10 []
-0
+>>> fromDigits 10 [9,8]
 -}
 fromDigits :: (HasCallStack) => (Integral a) => a -> [a] -> a
 fromDigits base
