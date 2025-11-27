@@ -34,10 +34,6 @@ common day
     , unordered-containers
     , vector
 
-executable 2015-05
-  import: day, extensions
-  main-is: 2015/05.hs
-
 executable 2024-01
   import:  day, extensions
   main-is: 2024/01.hs
