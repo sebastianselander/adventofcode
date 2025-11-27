@@ -40,6 +40,7 @@ library
     , search-algorithms >= 0.3.3
     , array
     , MemoTrie
+    , pretty-simple
 
   hs-source-dirs:   src
   default-language: GHC2021
