@@ -121,15 +121,30 @@ getRawInput year day = do
 getArrayInput :: IArray a Char => Int -> Int -> IO (a Coord Char)
 getArrayInput year day = coordArray . lines <$> getRawInput year day
 
+format' :: QuasiQuoter
+format' =
+    QuasiQuoter
+        { quoteExp = makeParser <=< parseFormat
+        , quoteType = toType <=< (fmap (\(_, _, p) -> p) . parseFormat)
+        , quotePat = const $ fail "Patterns not supported"
+        , quoteDec = const $ fail "Decs not supported"
+        }
+  where
+    makeParser (year, _, p) =
+        [|
+            let fmtparser = parseErr ($(toParser p) <* eof)
+             in fmtparser <$> getTestInput year
+            |]
+
 {- |
 %i - parse an integer, optionally prefixed by `+` or `-`
-%u - parse any unsigned integer, not prefixed by +
+%u - parse any unsigned integeger, not prefixed by +
 %d - parse any single digit
 %n - parse a newline
 %c - parse any lower-case, upper-case or
      title-case unicode plus letters according to isAlpha
 %s - like char, but for strings
-%y - parse a word (no space characters)
+%y - parse one of `!@#$%^&*_+=|'\`
 <fmt>! - save the result of as a string <fmt>
 <fmt>? - zero or one
 <fmt>* - zero or many
@@ -170,21 +185,6 @@ COMMA: :
 PLUS: +
 TILDE: ~
 -}
-format' :: QuasiQuoter
-format' =
-    QuasiQuoter
-        { quoteExp = makeParser <=< parseFormat
-        , quoteType = toType <=< (fmap (\(_, _, p) -> p) . parseFormat)
-        , quotePat = const $ fail "Patterns not supported"
-        , quoteDec = const $ fail "Decs not supported"
-        }
-  where
-    makeParser (year, _, p) =
-        [|
-            let fmtparser = parseErr ($(toParser p) <* eof)
-             in fmtparser <$> getTestInput year
-            |]
-
 format :: QuasiQuoter
 format =
     QuasiQuoter
