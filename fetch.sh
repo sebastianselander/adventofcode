@@ -17,7 +17,7 @@ else
     DAY_OUTPUT=$DAY
 fi
 
-OUTPUT_PATH="/home/sebastian/Documents/git/adventofcode/inputs/$YEAR/$DAY_OUTPUT.txt"
+OUTPUT_PATH="./inputs/$YEAR/$DAY_OUTPUT.txt"
 
 curl --cookie cookie https://adventofcode.com/$YEAR/day/$DAY/input > $OUTPUT_PATH
 echo $OUTPUT_PATH
