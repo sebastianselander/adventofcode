@@ -1,25 +1,26 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
-import Advent.Format (format)
+import Advent.Format (format, intro)
 import Advent.Prelude (count)
+
+data D = D_L | D_R
+
+intro
 
 main :: IO ()
 main = do
-    s <- [format|2025 01 (%c%u%n)*|]
+    s <- [format|2025 01 (@D%u%n)*|]
     print $ count 0 $ rot s
-    print $ count 0 $ rot2 50 s
+    print $ count 0 $ rot $ extend s
 
-f :: (Num a) => Char -> a -> a -> a
-f 'L' = (-)
-f 'R' = (+)
+extend :: [(D, Int)] -> [(D, Int)]
+extend xs = concat [replicate n (d, 1) | (d, n) <- xs]
 
-rot :: [(Char, Int)] -> [Int]
+rot :: [(D, Int)] -> [Int]
 rot = scanl (\acc (dir, n) -> f dir acc n `mod` 100) 50
-
-rot2 :: Int -> [(Char, Int)] -> [Int]
-rot2 _ [] = []
-rot2 code ((dir, n) : xs)
-    | n > 0 = new : rot2 new ((dir, n - 1) : xs)
-    | otherwise = rot2 code xs
   where
-    new = f dir code 1 `mod` 100
+    f :: D -> (Int -> Int -> Int)
+    f D_L = (-)
+    f D_R = (+)
