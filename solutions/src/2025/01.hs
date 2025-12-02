@@ -11,7 +11,7 @@ intro
 
 main :: IO ()
 main = do
-    s <- [format|2025 01 (@D%u%n)*|]
+    s <- [format|2025 1 (@D%u%n)*|]
     print $ count 0 $ rot s
     print $ count 0 $ rot $ extend s
 
