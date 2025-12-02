@@ -1,30 +1,18 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude
-import Data.List
+import Advent.Prelude (same, toDigits, chunks)
+import Data.List (tails)
 
 main :: IO ()
 main = do
     s <- [format|2025 2 (%u-%u)&,%n|]
-    print $ sum [ sum (invalids [from .. to]) | (from, to) <- s]
-    print $ sum [ sum $ filter invalid2 [from .. to] | (from, to) <- s]
+    let rngs = [[from .. to] | (from, to) <- s]
+    print $ sum $ fmap (sum . filter (invalid . toDigits 10)) rngs
+    print $ sum $ fmap (sum . filter (invalid2 . toDigits 10)) rngs
 
-invalid2 :: Int -> Bool
-invalid2 n = any (\x -> go True x n') (init $ tail $ inits n')
-  where
-    go False _ _ = False
-    go True _ [] = True
-    go True v xs = go (v == take l xs) v (drop l xs)
-      where
-        l = length v
-    n' = show n
+invalid2 :: [Int] -> Bool
+invalid2 n = any (\x -> same (chunks (length x) n)) (init $ drop 1 $ tails n)
 
-invalids :: [Int] -> [Int]
-invalids = filter invalid
-
-invalid :: Int -> Bool
-invalid n = ((length n' `mod` 2) /= 1) && (let (fi, la) = splitAt (length n' `div` 2) n'
-  in read @Int fi == read la)
-  where
-    n' = show n
+invalid :: [Int] -> Bool
+invalid n = uncurry (==) $ splitAt (length n `div` 2) n
