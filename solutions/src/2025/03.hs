@@ -1,23 +1,16 @@
 module Main where
 
 import Advent.Format (format)
-import Advent.Prelude
-import Data.Char (digitToInt)
+import Advent.Prelude (fromDigits, times)
 
 main :: IO ()
 main = do
-    s <- [format|2025 3 (%s%n)*|]
-    let digs = fmap (fmap digitToInt) s
-    print $ sum $ fmap largest digs
-    print $ sum $ fmap (fromDigits 10 . largest2 11) digs
+    s <- [format|2025 3 (%d*%n)*|]
+    print $ sum $ fmap (fromDigits 10 . largest 2) s
+    print $ sum $ fmap (fromDigits 10 . largest 12) s
 
-largest :: [Int] -> Int
-largest xs = m * 10 + maximum (drop 1 $ dropWhile (/= m) xs)
+largest :: Int -> [Int] -> [Int]
+largest 1 xs = [maximum xs]
+largest n xs = m : largest (n - 1) (drop 1 $ dropWhile (/= m) xs)
   where
-    m = maximum (init xs)
-
-largest2 :: Int -> [Int] -> [Int]
-largest2 0 xs = [maximum xs]
-largest2 n xs = m : largest2 (n-1) (drop 1 $ dropWhile (/=m) xs)
-  where
-    m = maximum (times n init xs)
+    m = maximum (times (n - 1) init xs)
