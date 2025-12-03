@@ -9,11 +9,11 @@ module Advent.Format where
 import Control.Arrow ((>>>))
 import Control.Monad (forM, replicateM, void, (<=<))
 import Data.Char ( digitToInt, isUpper, isSpace )
-import Data.Data (Data, Typeable)
+import Data.Data (Data)
 import Data.Function (on)
 import Data.Functor (($>))
 import Data.Functor.Identity (Identity)
-import Data.List (foldl', isPrefixOf, sortBy, stripPrefix)
+import Data.List (isPrefixOf, sortBy, stripPrefix)
 import Language.Haskell.TH (
     Con (NormalC),
     Dec (DataD),
@@ -98,7 +98,7 @@ data Format
     | Alternative !Format !Format
     | SepBy !Format !Format
     | Follows !Format !Format
-    deriving (Show, Typeable, Data)
+    deriving (Show, Data)
 
 getTestInput :: Int -> IO String
 getTestInput year = do
@@ -137,8 +137,8 @@ format' =
             |]
 
 {- |
-%i - parse an integer, optionally prefixed by `+` or `-`
-%u - parse any unsigned integeger, not prefixed by +
+%i - parse a signed number, optionally prefixed by `+` or `-`
+%u - parse any unsigned number, not prefixed by +
 %d - parse any single digit
 %n - parse a newline
 %c - parse any lower-case, upper-case or
@@ -152,7 +152,7 @@ format' =
 ~<fmt> - discard the result
 <fmt1>|<fmt2> - <fmt1> or <fmt2>
 <fmt1>&<fmt2>- zero or more <fmt1> separated by <fmt1>
-For example in `data Foo = Foo_LT` it will then create a parse usable by `@Foo` that parses `<` and saves it as `Foo_LT`
+For example in `data Foo = Foo_LT` it will then create a parser usable by `@Foo` that parses `<` and saves it as `Foo_LT`
 This only works for the following symbols.
 Parsing an arbitrary text can be done as follows: `Foo_bar`. This creates a parser that parses `bar` and returns the constructor `Foo_bar` in its place.
 LT: <
@@ -399,13 +399,13 @@ gather p = do
 symbol :: Parser Char
 symbol = oneOf ".!@#$%^&*_+=|'\";:"
 
-decimal :: [Int] -> Int
-decimal = foldl' (\acc -> ((10 * acc) +)) 0
+decimal :: Num a => [Int] -> a
+decimal = foldl' (\acc x -> (10 * acc) + fromIntegral x) 0
 
-unsigned :: Parser Int
+unsigned :: Num a => Parser a
 unsigned = decimal <$> many1 (digitToInt <$> digit)
 
-signed :: Parser Int
+signed :: Num a => Parser a
 signed = do
     f <- option id (char '-' $> negate <|> char '+' $> id)
     f <$> unsigned
