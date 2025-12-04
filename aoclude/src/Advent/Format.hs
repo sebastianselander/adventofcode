@@ -116,7 +116,7 @@ getRawInput year day = do
     if executable
         then readFile (printf file year day)
         else -- hack work around for repl
-            readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year day)
+            readFile (printf ("../" <> file) year day)
 
 getArrayInput :: IArray a Char => Int -> Int -> IO (a Coord Char)
 getArrayInput year day = coordArray . lines <$> getRawInput year day
