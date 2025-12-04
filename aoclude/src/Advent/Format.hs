@@ -6,14 +6,17 @@
 
 module Advent.Format where
 
+import Advent.Coord (Coord, coordArray)
 import Control.Arrow ((>>>))
 import Control.Monad (forM, replicateM, void, (<=<))
-import Data.Char ( digitToInt, isUpper, isSpace )
+import Data.Array.Base (IArray)
+import Data.Char (digitToInt, isSpace, isUpper)
 import Data.Data (Data)
 import Data.Function (on)
 import Data.Functor (($>))
 import Data.Functor.Identity (Identity)
 import Data.List (isPrefixOf, sortBy, stripPrefix)
+import Data.List.Extra (splitOn)
 import Language.Haskell.TH (
     Con (NormalC),
     Dec (DataD),
@@ -38,6 +41,7 @@ import System.Directory.Extra (doesFileExist)
 import Text.Parsec (
     ParseError,
     Parsec,
+    alphaNum,
     anyChar,
     between,
     chainl1,
@@ -49,15 +53,14 @@ import Text.Parsec (
     letter,
     many,
     many1,
-    alphaNum,
     newline,
-    satisfy,
     noneOf,
     oneOf,
     option,
     optionMaybe,
     optional,
     parse,
+    satisfy,
     sepBy,
     string,
     try,
@@ -71,9 +74,6 @@ import Text.Parsec.Expr (
     buildExpressionParser,
  )
 import Text.Printf (printf)
-import Data.List.Extra (splitOn)
-import Advent.Coord (coordArray, Coord)
-import Data.Array.Base (IArray)
 
 intro :: Q [Dec]
 intro = return []
@@ -102,24 +102,27 @@ data Format
 
 getTestInput :: Int -> IO String
 getTestInput year = do
-    let file = "inputs/%d/test.txt"
+    let file = printf "inputs/%d/test.txt" year
     executable <- doesFileExist file
     if executable
-        then readFile (printf file year)
+        then readFile file
         else -- hack work around for repl
-            readFile (printf ("/home/sebastian/Documents/git/adventofcode/" <> file) year)
+            readFile ("../" <> file)
 
 getRawInput :: Int -> Int -> IO String
 getRawInput year day = do
-    let file = "inputs/%d/%02d.txt"
+    let file = printf "inputs/%d/%02d.txt" year day
     executable <- doesFileExist file
     if executable
-        then readFile (printf file year day)
+        then readFile file
         else -- hack work around for repl
-            readFile (printf ("../" <> file) year day)
+            readFile ("../" <> file)
 
-getArrayInput :: IArray a Char => Int -> Int -> IO (a Coord Char)
+getArrayInput :: (IArray a Char) => Int -> Int -> IO (a Coord Char)
 getArrayInput year day = coordArray . lines <$> getRawInput year day
+
+getArrayInput' :: (IArray a Char) => Int -> Int -> IO (a Coord Char)
+getArrayInput' year day = coordArray . lines <$> getTestInput year
 
 format' :: QuasiQuoter
 format' =
@@ -399,13 +402,13 @@ gather p = do
 symbol :: Parser Char
 symbol = oneOf ".!@#$%^&*_+=|'\";:"
 
-decimal :: Num a => [Int] -> a
+decimal :: (Num a) => [Int] -> a
 decimal = foldl' (\acc x -> (10 * acc) + fromIntegral x) 0
 
-unsigned :: Num a => Parser a
+unsigned :: (Num a) => Parser a
 unsigned = decimal <$> many1 (digitToInt <$> digit)
 
-signed :: Num a => Parser a
+signed :: (Num a) => Parser a
 signed = do
     f <- option id (char '-' $> negate <|> char '+' $> id)
     f <$> unsigned
@@ -526,26 +529,25 @@ pattern Maybe x <- AppT (ConT (nameBase -> "Maybe")) x
 pattern Either :: Type -> Type -> Type
 pattern Either l r <- AppT (AppT (ConT (nameBase -> "Either")) l) r
 
-
 isCharTy :: Type -> Bool
 isCharTy (ConT (nameBase -> "Char")) = True
 isCharTy _ = False
 
 processSymbolName :: String -> Q String
-processSymbolName str = pure $ concatMap (\x -> maybe x (:"") (lookup x symbolNames)) xs
+processSymbolName str = pure $ concatMap (\x -> maybe x (: "") (lookup x symbolNames)) xs
   where
     xs = splitOn "_" str
 
-    -- case break ('_' ==) str of
-    --     (name, rest) ->
-    --         case lookup name symbolNames of
-    --             Nothing -> case rest of
-    --                 [] -> pure name
-    --                 _ -> (name <>) <$> processSymbolName rest
-    --             Just sym ->
-    --                 case rest of
-    --                     [] -> pure [sym]
-    --                     _ : str' -> (sym :) <$> processSymbolName str'
+-- case break ('_' ==) str of
+--     (name, rest) ->
+--         case lookup name symbolNames of
+--             Nothing -> case rest of
+--                 [] -> pure name
+--                 _ -> (name <>) <$> processSymbolName rest
+--             Just sym ->
+--                 case rest of
+--                     [] -> pure [sym]
+--                     _ : str' -> (sym :) <$> processSymbolName str'
 
 symbolNames :: [(String, Char)]
 symbolNames =

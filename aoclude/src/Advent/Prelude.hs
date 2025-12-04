@@ -46,6 +46,9 @@ chunks n xs =
     case splitAt n xs of
         (a, b) -> a : chunks n b
 
+(!?) :: (A.IArray a e, A.Ix i, Alternative f) => a i e -> i -> f e
+(!?) = arrIx
+
 -- | Index an array returning 'Nothing' if the index is out of bounds.
 arrIx :: (A.IArray a e, A.Ix i, Alternative f) => a i e -> i -> f e
 arrIx a i
