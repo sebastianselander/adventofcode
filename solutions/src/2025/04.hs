@@ -1,8 +1,9 @@
 module Main where
 
-import Advent.Coord (Coord, contains, neighborsOn)
+import Advent.Coord (Coord, neighbors)
 import Advent.Format (getArrayInput)
-import Data.Array (Array, bounds, indices, (!), (//))
+import Advent.Prelude ((!?))
+import Data.Array (Array, indices, (!), (//))
 import Data.Maybe (mapMaybe)
 
 main :: IO ()
@@ -11,14 +12,16 @@ main = do
     print $ head $ sim s
     print $ sum $ sim s
 
-access :: Coord -> Array Coord Char -> Maybe Coord
-access c arr
+accessible :: Coord -> Array Coord Char -> Maybe Coord
+accessible c arr
     | arr ! c == '@'
-    , length ([() | cs <- neighborsOn (contains (bounds arr)) c, arr ! cs == '@']) < 4 =
+    , length ([() | cs <- neighbors c, arr !? cs == Just '@']) < 4 =
         Just c
     | otherwise = Nothing
 
 sim :: Array Coord Char -> [Int]
-sim arr = if null x then [] else length x : sim (arr // map (,'.') x)
+sim arr
+    | null rolls = []
+    | otherwise = length rolls : sim (arr // map (,'.') rolls)
   where
-    x = mapMaybe (`access` arr) (indices arr)
+    rolls = mapMaybe (`accessible` arr) (indices arr)
