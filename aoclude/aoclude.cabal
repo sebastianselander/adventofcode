@@ -27,6 +27,7 @@ library
     Advent.Prelude
     Advent.Nat
     Advent.ReadS
+    Advent.Range
     Advent.Flow
     Advent.Search
 
@@ -41,6 +42,7 @@ library
     , array
     , MemoTrie
     , pretty-simple
+    , range
 
   hs-source-dirs:   src
   default-language: GHC2021
