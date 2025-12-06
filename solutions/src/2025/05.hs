@@ -1,12 +1,13 @@
 module Main where
 
+import Advent.Box (Box (Dim, Pt), intersectBox, size, unionBoxes)
 import Advent.Format (format)
-import Advent.Range (mergeRanges)
-import Data.Ix (inRange, rangeSize)
 import Data.List (nub)
 
 main :: IO ()
 main = do
-    (rngs, xs :: [Int]) <- [format|2025 5 (%u-%u%n)*%n(%u%n)*|]
-    print $ length $ nub [x | rn <- rngs, x <- xs, rn `inRange` x]
-    print $ sum (rangeSize <$> mergeRanges rngs)
+    (as, bs :: [Int]) <- [format|2025 5 (%u-%u%n)*%n(%u%n)*|]
+    let ranges = [Dim l (u + 1) Pt | (l, u) <- as]
+        boxes = [Dim x (x + 1) Pt | x <- bs]
+    print $ length $ nub [box | range <- ranges, box <- boxes, Just _ <- [intersectBox range box]]
+    print $ sum (size <$> unionBoxes ranges)
