@@ -27,7 +27,6 @@ library
     Advent.Prelude
     Advent.Nat
     Advent.ReadS
-    Advent.Range
     Advent.Flow
     Advent.Search
 
