@@ -100,8 +100,8 @@ data Format
     | Follows !Format !Format
     deriving (Show, Data)
 
-getTestInput :: Int -> IO String
-getTestInput year = do
+getRawInput' :: Int -> Int -> IO String
+getRawInput' year _ = do
     let file = printf "inputs/%d/test.txt" year
     executable <- doesFileExist file
     if executable
@@ -122,7 +122,7 @@ getArrayInput :: (IArray a Char) => Int -> Int -> IO (a Coord Char)
 getArrayInput year day = coordArray . lines <$> getRawInput year day
 
 getArrayInput' :: (IArray a Char) => Int -> Int -> IO (a Coord Char)
-getArrayInput' year day = coordArray . lines <$> getTestInput year
+getArrayInput' year day = coordArray . lines <$> getRawInput' year day
 
 format' :: QuasiQuoter
 format' =
