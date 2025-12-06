@@ -155,5 +155,8 @@ executable 2025-04
 
 executable 2025-05
   import: day, extensions
-  build-depends: range
   main-is: 2025/05.hs
+
+executable 2025-06
+  import: day, extensions
+  main-is: 2025/06.hs
