@@ -10,12 +10,12 @@ main = do
     xs <- lines <$> getRawInput 2025 6
     let ints = fmap read . words <$> init xs
     let ops = words $ last xs
-    print $ sum $ fmap (uncurry calculate) (zip (transpose ints) ops)
+    print $ sum $ fmap (uncurry calculate) (zip ops (transpose ints))
     print $ sum (solve <$> splitOn [replicate (length xs) ' '] (transpose xs))
 
 solve :: [String] -> Int
-solve xs@(x:_) = calculate (fmap (read . filter isDigit) xs) [last $ x]
+solve xs@(x:_) = calculate [last x] (fmap (read . filter isDigit) xs)
 
-calculate :: [Int] -> String -> Int
-calculate xs "*" = product xs
-calculate xs "+" = sum xs
+calculate :: String -> [Int] -> Int
+calculate "*" = product
+calculate "+" = sum
