@@ -17,7 +17,7 @@ common extensions
 
 common day
   hs-source-dirs: src
-  ghc-options: -Wall
+  ghc-options:    -Wall
   build-depends:
     , aoclude
     , array
@@ -25,6 +25,7 @@ common day
     , composition
     , containers
     , extra
+    , MemoTrie
     , monad-memo
     , mtl
     , parsec
@@ -43,125 +44,124 @@ executable 2024-02
   main-is: 2024/02.hs
 
 executable 2024-03
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/03.hs
 
 executable 2024-04
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/04.hs
 
 executable 2024-05
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/05.hs
 
 executable 2024-06
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/06.hs
 
 executable 2024-07
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/07.hs
 
 executable 2024-08
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/08.hs
 
 executable 2024-09
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/09.hs
 
 executable 2024-10
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/10.hs
 
 executable 2024-11
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/11.hs
 
 executable 2024-12
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/12.hs
 
 executable 2024-13
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/13.hs
 
 executable 2024-14
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/14.hs
 
 executable 2024-15
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/15.hs
 
 executable 2024-16
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/16.hs
 
 executable 2024-17
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/17.hs
 
 executable 2024-18
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/18.hs
 
 executable 2024-19
-  import: day, extensions
+  import:        day, extensions
   build-depends: MemoTrie
-  main-is: 2024/19.hs
+  main-is:       2024/19.hs
 
 executable 2024-20
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/20.hs
 
 executable 2024-21
-  import: day, extensions
+  import:        day, extensions
   build-depends: MemoTrie
-  main-is: 2024/21.hs
+  main-is:       2024/21.hs
 
 executable 2024-22
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/22.hs
 
 executable 2024-23
-  import: day, extensions
+  import:        day, extensions
   build-depends: maximal-cliques
-  main-is: 2024/23.hs
+  main-is:       2024/23.hs
 
 executable 2024-24
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/24.hs
 
 executable 2024-25
-  import: day, extensions
+  import:  day, extensions
   main-is: 2024/25.hs
 
 executable 2025-01
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/01.hs
 
 executable 2025-02
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/02.hs
 
 executable 2025-03
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/03.hs
 
 executable 2025-04
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/04.hs
 
 executable 2025-05
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/05.hs
 
 executable 2025-06
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/06.hs
 
 executable 2025-07
-  import: day, extensions
-  build-depends: MemoTrie
+  import:  day, extensions
   main-is: 2025/07.hs
