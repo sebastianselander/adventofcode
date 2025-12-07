@@ -160,3 +160,8 @@ executable 2025-05
 executable 2025-06
   import: day, extensions
   main-is: 2025/06.hs
+
+executable 2025-07
+  import: day, extensions
+  build-depends: MemoTrie
+  main-is: 2025/07.hs

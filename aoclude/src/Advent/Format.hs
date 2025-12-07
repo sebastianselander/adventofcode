@@ -133,10 +133,10 @@ format' =
         , quoteDec = const $ fail "Decs not supported"
         }
   where
-    makeParser (year, _, p) =
+    makeParser (year, day, p) =
         [|
             let fmtparser = parseErr ($(toParser p) <* eof)
-             in fmtparser <$> getTestInput year
+             in fmtparser <$> getRawInput' year day
             |]
 
 {- |
