@@ -2,8 +2,7 @@ module Main where
 
 import Advent.Coord3 (Coord3 (..), euclidean)
 import Advent.Format (format)
-import Data.List (nub, sortOn )
-import Data.List (elemIndex)
+import Data.List ( nub, sortOn, elemIndex )
 import Data.Maybe (fromJust)
 import Data.Ord (Down (..))
 import Data.Set qualified as Set
@@ -13,7 +12,7 @@ main :: IO ()
 main = do
     xs <- [format|2025 8 (%u,%u,%u%n)*|]
     let boxes = [C3 x y z | (x, y, z) <- xs]
-        pairs = sortOn (uncurry euclidean) [(x, y) 
+        pairs = sortOn (uncurry euclidean) [(x, y)
                                      | (i, x) <- zip [0 ..] boxes
                                      , y <- drop i boxes
                                      , x /= y]
