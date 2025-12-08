@@ -25,6 +25,9 @@ data Coord3 = C3 !Int !Int !Int
 origin :: Coord3
 origin = C3 0 0 0
 
+euclidean :: Coord3 -> Coord3 -> Double
+euclidean (C3 x1 y1 z1) (C3 x2 y2 z2) = sqrt $ fromIntegral (x1 - x2)^2 + fromIntegral (y1 - y2)^2 + fromIntegral (z1 - z2)^2
+
 -- | Sum of absolute value of differences in each of the 3 axes.
 manhattan :: Coord3 -> Coord3 -> Int
 manhattan (C3 x1 y1 z1) (C3 x2 y2 z2) = abs (x1 - x2) + abs (y1 - y2) + abs (z1 - z2)
