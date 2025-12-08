@@ -2,6 +2,9 @@ module Advent.Search where
 
 import Advent.Queue qualified as Queue
 import Data.Set qualified as Set
+import Data.Map (Map)
+import Data.Set (Set)
+import qualified Data.Map as Map
 
 dfs :: Ord a => (a -> [a]) -> a -> [a]
 dfs f s = dfsN f [s]
@@ -36,3 +39,13 @@ bfsOnN rep next = go Set.empty . Queue.fromList
       where
         r = rep q
         qs' = Queue.appendList qs (next q)
+
+clique :: Ord a => a -> Map a (Set a) -> Set a
+clique x g = go [x] Set.empty
+  where
+    go [] seen = seen
+    go (x : xs) seen
+        | Set.member x seen = go xs seen
+        | otherwise = case Map.lookup x g of
+            Nothing -> go xs seen
+            Just neighbors -> go (Set.toList neighbors <> xs) (Set.insert x seen)
