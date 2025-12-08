@@ -24,7 +24,7 @@ main = do
         countPaths = memo go
         go c = case arr !? c of
             Nothing -> 1
-            Just '^' -> countPaths  (left (below c)) + countPaths  (right (below c))
-            Just _ -> countPaths  (below c)
+            Just '^' -> countPaths (left (below c)) + countPaths (right (below c))
+            Just _ -> countPaths (below c)
     print $ dfs [start] mempty
     print $ countPaths start
