@@ -168,4 +168,5 @@ executable 2025-07
 
 executable 2025-08 
   import: day, extensions
+  build-depends: disjoint-containers
   main-is: 2025/08.hs
