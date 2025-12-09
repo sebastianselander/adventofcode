@@ -79,9 +79,10 @@ euclidean c1 c2 = pyth (c1 - c2)
   where
     pyth (C l r) = sqrt (fromIntegral (l * l + r * r))
 
-perimeter :: Set Coord -> [(Coord, Coord)]
-perimeter s | Set.null s = []
-perimeter coords = [(c, c - cx) | c <- toList coords, cx <- cardinalOn (`Set.notMember` coords) c]
+-- | Given a filled in area return 
+perimeter :: Set Coord -> Set Coord
+perimeter s | Set.null s = Set.empty
+perimeter coords = Set.unions [Set.fromList [c, c - cx] | c <- toList coords, cx <- cardinalOn (`Set.notMember` coords) c]
 
 origin :: Coord
 origin = C 0 0
