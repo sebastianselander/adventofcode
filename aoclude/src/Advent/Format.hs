@@ -473,7 +473,9 @@ makeEnumParser xs = do
                         '_' : symbolName -> do
                             sym <- processSymbolName symbolName
                             return (n, pure sym)
-                        _ -> fail "Constructor name must be separated by '_'"
+                        symbolName -> do
+                            sym <- processSymbolName symbolName
+                            return (n, pure sym)
                 | otherwise ->
                     fail $
                         "Constructor '"
