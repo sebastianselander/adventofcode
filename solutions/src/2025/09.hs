@@ -1,3 +1,6 @@
+{-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Main where
 
 import Advent.Coord (Coord (..), boundingBox, neighbors)
@@ -13,16 +16,16 @@ main = do
     let scalar = 200
     let coords' = map (\(x, y) -> (C (y `div` scalar) (x `div` scalar), C y x)) xs
     let ogMap = Map.fromList coords'
-    let (coords, coordsOG) = unzip coords'
+    let coords = map fst coords'
     let (C x1 y1, C x2 y2) = boundingBox coords
-    let start = C (((x2 - x1) `div` 2) - 10) ((y2 - y1) `div` 2)
+    let start = C (((x2 - x1) `div` 2) - 1) ((y2 - y1) `div` 2)
     let poly = flood (Set.fromList $ perimeter coords) [start]
-    let (_, (a, b)) = maximumOn fst [(n, (a, b)) | (n, (a, b)) <- largest coords, inside poly a b]
+    let (_, (a, b)) = maximumOn fst [(n, (aa, bb)) | (n, (aa, bb)) <- largest coords, inside poly aa bb]
     let v c1 c2 =
             let C x1 y1 = ogMap Map.! c1
                 C x2 y2 = ogMap Map.! c2
              in (abs (x1 - x2) + 1) * (abs (y1 - y2) + 1)
-    print $ maximum [n | (n, _) <- largest coordsOG]
+    print $ maximum [n | (n, _) <- largest (map (uncurry C) xs)]
     print $ v a b
 
 flood :: Set Coord -> [Coord] -> Set Coord
@@ -42,7 +45,13 @@ largest xs =
     ]
 
 inside :: Set Coord -> Coord -> Coord -> Bool
-inside poly a b = and [Set.member (C r c) poly | r <- [r1 .. r2], c <- [c1 .. c2]]
+inside poly a b =
+    and
+        [ Set.member (C r c) poly
+        | r <- [r1 .. r2]
+        , c <- [c1 .. c2]
+        , r == r1 || r == r2 || c == c1 || c == c2
+        ]
   where
     (C r1 c1, C r2 c2) = boundingBox [a, b]
 
