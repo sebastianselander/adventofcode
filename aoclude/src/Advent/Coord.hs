@@ -1,8 +1,9 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
-{-# LANGUAGE UnboxedTuples #-}
-{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UnboxedTuples #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Advent.Coord where
 
@@ -13,14 +14,17 @@ import Data.Array.IArray (array)
 import Data.Array.IO.Internals qualified as AB
 import Data.Data (Data)
 import Data.Foldable (toList)
-import Data.Map (Map, findWithDefault, keys, fromList)
+import Data.List (sortOn)
+import Data.Map (Map, findWithDefault, fromList, keys)
+import Data.MemoTrie
+import Data.Ord (Down (Down))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Vector.Internal.Check (HasCallStack)
 import GHC.Base (Int (I#), indexIntArray#, readIntArray#, writeIntArray#, (*#), (+#))
 import GHC.Generics (Generic)
 import GHC.Ix (Ix (..), indexError)
 import GHC.ST (ST (ST))
-import Data.MemoTrie
 
 -- | (Row, Column)
 data Coord = C !Int !Int
@@ -79,10 +83,51 @@ euclidean c1 c2 = pyth (c1 - c2)
   where
     pyth (C l r) = sqrt (fromIntegral (l * l + r * r))
 
--- | Given a filled in area return 
-perimeter :: Set Coord -> Set Coord
-perimeter s | Set.null s = Set.empty
-perimeter coords = Set.unions [Set.fromList [c, c - cx] | c <- toList coords, cx <- cardinalOn (`Set.notMember` coords) c]
+-- | Given a filled in area return the perimeter around it
+perimeter :: (Foldable f) => f Coord -> Set Coord
+perimeter s | null s = Set.empty
+perimeter (toList -> coords) = Set.unions [Set.fromList [c, c - cx] | c <- coords, cx <- cardinalOn (`Set.notMember` coordsSet) c]
+  where
+    coordsSet = Set.fromList coords
+
+{- | Find the outline given a set of points. The points must be given in clockwise or counter-clockwise order. Similar to @perimeter@ but the area does not have to be filled in
+outline. The function errors if a diagonal line is required.
+..............
+.......X...X..
+..............
+..X....X......
+..............
+..X......X....
+..............
+.........X.X..
+..............
+==
+..............
+.......XXXXX..
+.......X...X..
+..XXXXXX...X..
+..X........X..
+..XXXXXXXX.X..
+.........X.X..
+.........XXX..
+..............
+outline :: Foldable f => f Coord -> Set Coord
+-}
+outline :: (Foldable f) => f Coord -> [Coord]
+outline (toList -> []) = []
+outline (toList -> xs@(xx : _)) = go (xs <> [xx])
+  where
+    go (a@(C ax ay) : b@(C bx by) : ys) = new <> go (b : ys)
+      where
+        new = case b - a of
+            C 0 dy
+                | dy > 0 -> [C ax y | y <- [ay .. by]]
+                | otherwise -> [C ax y | y <- [by .. ay]]
+            C dx 0
+                | dx > 0 -> [C x ay | x <- [ax .. bx]]
+                | otherwise -> [C x ay | x <- [bx .. ax]]
+            c -> error $ "impossible: " <> show c
+    go _ = []
 
 origin :: Coord
 origin = C 0 0
@@ -178,7 +223,6 @@ coordToChar x
     | x == south = Just 'v'
     | otherwise = Nothing
 
-
 charToCoord :: Char -> Maybe Coord
 charToCoord = \case
     '^' -> Just north
@@ -212,10 +256,10 @@ instance Num Coord where
     fromInteger = (\i -> C i i) . fromInteger
 
 instance HasTrie Coord where
-  newtype Coord :->: a = CT (Int :->: Int :->: a)
-  trie f = CT (trie \y -> trie (f . C y))
-  CT t `untrie` C y x = t `untrie` y `untrie` x
-  enumerate (CT t) = [(C y x, a) | (y, xs) <- enumerate t, (x, a) <- enumerate xs]
+    newtype Coord :->: a = CT (Int :->: Int :->: a)
+    trie f = CT (trie \y -> trie (f . C y))
+    CT t `untrie` C y x = t `untrie` y `untrie` x
+    enumerate (CT t) = [(C y x, a) | (y, xs) <- enumerate t, (x, a) <- enumerate xs]
 
 instance Show Coord where
     show (C row col) = "(" ++ show row ++ ", " ++ show col ++ ")"
