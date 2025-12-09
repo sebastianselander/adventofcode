@@ -27,6 +27,9 @@ import Data.Set qualified as Set
 import GHC.Arr qualified as GA
 import GHC.Stack (HasCallStack)
 
+todo :: HasCallStack => a 
+todo = error "TODO: Not yet implemented"
+
 {- | Bottom if the list does not contain both elements
   Quite slow probaby
 -}
