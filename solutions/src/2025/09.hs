@@ -6,6 +6,7 @@ module Main where
 import Advent.Coord (Coord (..), boundingBox, neighbors)
 import Advent.Format (format)
 import Data.List.Extra (maximumOn)
+import Data.Map ((!))
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -15,18 +16,12 @@ main = do
     xs <- [format|2025 9 (%u,%u%n)*|]
     let scalar = 249 -- incorrect answer if I go higher
     let coords' = map (\(x, y) -> (C (y `div` scalar) (x `div` scalar), C y x)) xs
-    let ogMap = Map.fromList coords'
+    let decompressed = Map.fromList coords'
     let coords = map fst coords'
     let (C x1 y1, C x2 y2) = boundingBox coords
-    let start = C (((x2 - x1) `div` 2) - 1) ((y2 - y1) `div` 2)
-    let poly = flood (Set.fromList $ perimeter coords) [start]
-    let (_, (a, b)) = maximumOn fst [(n, (aa, bb)) | (n, (aa, bb)) <- largest coords, inside poly aa bb]
-    let v c1 c2 =
-            let C x1 y1 = ogMap Map.! c1
-                C x2 y2 = ogMap Map.! c2
-             in (abs (x1 - x2) + 1) * (abs (y1 - y2) + 1)
-    print $ maximum [n | (n, _) <- largest (map (uncurry C) xs)]
-    print $ v a b
+    let polygon = flood (Set.fromList $ perimeter coords) [C ((x2 - x1) `div` 2 - 1) ((y2 - y1) `div` 2)]
+    print $ maximum [area a b | (a, b) <- rectangles (map (uncurry C) xs)]
+    print $ maximum [area (decompressed ! aa) (decompressed ! bb) | (aa, bb) <- rectangles coords, inside polygon aa bb]
 
 flood :: Set Coord -> [Coord] -> Set Coord
 flood seen [] = seen
@@ -34,15 +29,11 @@ flood seen (x : xs)
     | Set.member x seen = flood seen xs
     | otherwise = flood (Set.insert x seen) (neighbors x <> xs)
 
-largest :: [Coord] -> [(Int, (Coord, Coord))]
-largest xs =
-    [ ( v
-      , (C x1 y1, C x2 y2)
-      )
-    | (i, C x1 y1) <- zip [0 ..] xs
-    , C x2 y2 <- drop i xs
-    , let v = (abs (x1 - x2) + 1) * (abs (y1 - y2) + 1)
-    ]
+area :: Coord -> Coord -> Int
+area (C x1 y1) (C x2 y2) = (abs (x1 - x2) + 1) * (abs (y1 - y2) + 1)
+
+rectangles :: [Coord] -> [(Coord, Coord)]
+rectangles xs = [(C x1 y1, C x2 y2) | (i, C x1 y1) <- zip [0 ..] xs, C x2 y2 <- drop i xs]
 
 inside :: Set Coord -> Coord -> Coord -> Bool
 inside poly a b =
@@ -55,6 +46,7 @@ inside poly a b =
   where
     (C r1 c1, C r2 c2) = boundingBox [a, b]
 
+-- | The list of coords must be ordered clockwise or counter-clockwise
 perimeter :: [Coord] -> [Coord]
 perimeter [] = []
 perimeter (x : xs) = go (x : xs)
