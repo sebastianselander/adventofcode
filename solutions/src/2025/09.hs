@@ -13,7 +13,7 @@ import Data.Set qualified as Set
 main :: IO ()
 main = do
     xs <- [format|2025 9 (%u,%u%n)*|]
-    let scalar = 200
+    let scalar = 249 -- incorrect answer if I go higher
     let coords' = map (\(x, y) -> (C (y `div` scalar) (x `div` scalar), C y x)) xs
     let ogMap = Map.fromList coords'
     let coords = map fst coords'
