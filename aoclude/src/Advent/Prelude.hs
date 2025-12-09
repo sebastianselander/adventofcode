@@ -193,6 +193,3 @@ binarySearch e p lo hi
     | otherwise = binarySearch e p lo mi
   where
     mi = (lo + hi) `div` 2
-
-(...) :: Enum a => a -> a -> [a]
-a ... b = if fromEnum a < fromEnum b then [a .. b] else [b, pred b .. a]
