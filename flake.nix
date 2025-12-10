@@ -22,6 +22,7 @@
               zlib
               blas
               lapack
+              python313Packages.pulp
             ];
           };
         };

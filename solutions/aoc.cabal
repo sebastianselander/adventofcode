@@ -166,11 +166,17 @@ executable 2025-07
   import:  day, extensions
   main-is: 2025/07.hs
 
-executable 2025-08 
-  import: day, extensions
+executable 2025-08
+  import:        day, extensions
   build-depends: disjoint-containers
-  main-is: 2025/08.hs
+  main-is:       2025/08.hs
 
 executable 2025-09
-  import: day, extensions
+  import:  day, extensions
   main-is: 2025/09.hs
+
+executable 2025-10
+  import:  day, extensions
+  build-depends: parallel, process
+  main-is: 2025/10.hs
+  ghc-options: -O2 -threaded +RTS -N
