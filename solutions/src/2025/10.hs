@@ -1,23 +1,24 @@
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE PatternSynonyms #-}
-
 module Main where
 
-import Advent.Format (format, format')
+import Advent.Format (format)
 import Advent.PQueue qualified as Q
-import Data.Array (Array, array, elems, (!), (//))
+import Data.Array (Array, array, (!))
 import Data.Bits (Bits (..))
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Scientific (Scientific)
+import Data.String (fromString)
 import Data.Word (Word16)
-import Advent.Prelude (setAt)
-import System.Process (readProcess)
+import Numeric.Optimization.MIP qualified as MIP
+import Numeric.Optimization.MIP ((.==.))
+import Numeric.Optimization.MIP.Solver qualified as MIP
 
 data Config = Config
     { lights :: (Word16, Int)
     , presses :: [[Int]]
     , joltage :: Array Int Int
-    } deriving Show
+    }
+    deriving (Show)
 
 main :: IO ()
 main = do
@@ -26,18 +27,38 @@ main = do
             map
                 ( \(as, ys, zs) ->
                     Config
-                        -- (array (0, length as - 1) [(i, if x == "#" then On else Off) | (i, x) <- zip [0 ..] as])
                         (foldl' (\acc (i, x) -> if x == "." then setBit acc i else acc) 0 (zip [0 ..] as), length as)
                         ys
                         (array (0, length zs - 1) [(i, x) | (i, x) <- zip [0 ..] zs])
                 )
                 xs
-    print $ sum $ map solve configs
-    writeFile "solutions/src/2025/python.txt" $ unlines $ map (\(Config _ presses jolts) -> show (presses <> [elems jolts])) configs
-    output <- readProcess "python3" ["./solutions/src/2025/solve.py"] ""
-    putStrLn output
+    print $ sum (map solve configs)
+    print =<< sum <$> mapM lp configs
+    
 
--- Part 1
+lp :: Config -> IO Scientific
+lp (Config _ presses joltage) = do
+    sol <- MIP.solve MIP.cbc MIP.def problem
+    pure (sum (Map.elems (MIP.solVariables sol)))
+  where
+    problem = 
+        MIP.def
+            { MIP.objectiveFunction =
+                MIP.def
+                    { MIP.objDir = MIP.OptMin
+                    , MIP.objExpr = sum (map MIP.varExpr variables)
+                    }
+            , MIP.constraints = constraints
+            , MIP.varDomains = Map.fromList [(v, (MIP.IntegerVariable, MIP.defaultBounds)) | v <- variables]
+            }
+    constraints =
+        [ (sum (map (MIP.varExpr . (variables !!)) vs)) .==. (MIP.constExpr (fromIntegral $ joltage ! k))
+        | (k, vs) <- Map.toList m
+        ]
+    m =
+        foldr (\(k, v) acc -> Map.insertWith (++) k [v] acc) Map.empty $
+            concat [map ((,i) . fromIntegral) p | (i, p) <- zip [0 ..] presses]
+    variables = take (length presses) [(fromString [a]) | a <- ['a' ..]]
 
 solve :: Config -> Int
 solve (Config (originalLight, len) presses _) = go mempty maxBound (Q.singleton 0 (2 ^ len - 1, 0))

@@ -23,6 +23,7 @@
               blas
               lapack
               python313Packages.pulp
+              cbc
             ];
           };
         };

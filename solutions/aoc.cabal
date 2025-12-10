@@ -35,6 +35,107 @@ common day
     , unordered-containers
     , vector
 
+executable 2023-01
+  import:        day, extensions
+  build-depends: regex
+  main-is:       2023/01.hs
+
+executable 2023-02
+  import:  day, extensions
+  main-is: 2023/02.hs
+
+executable 2023-03
+  import:  day, extensions
+  main-is: 2023/03.hs
+
+executable 2023-04
+  import:  day, extensions
+  main-is: 2023/04.hs
+
+executable 2023-05
+  import:  day, extensions
+  main-is: 2023/05.hs
+
+executable 2023-06
+  import:  day, extensions
+  main-is: 2023/06.hs
+
+executable 2023-07
+  import:  day, extensions
+  main-is: 2023/07.hs
+
+executable 2023-08
+  import:  day, extensions
+  main-is: 2023/08.hs
+
+executable 2023-09
+  import:  day, extensions
+  main-is: 2023/09.hs
+
+executable 2023-010
+  import:  day, extensions
+  main-is: 2023/10.hs
+
+executable 2023-11
+  import:  day, extensions
+  main-is: 2023/11.hs
+
+executable 2023-12
+  import:  day, extensions
+  main-is: 2023/12.hs
+
+executable 2023-13
+  import:  day, extensions
+  main-is: 2023/13.hs
+
+executable 2023-14
+  import:  day, extensions
+  main-is: 2023/14.hs
+
+executable 2023-15
+  import:  day, extensions
+  main-is: 2023/15.hs
+
+executable 2023-16
+  import:  day, extensions
+  main-is: 2023/16.hs
+
+executable 2023-17
+  import:  day, extensions
+  main-is: 2023/17.hs
+
+executable 2023-18
+  import:  day, extensions
+  main-is: 2023/18.hs
+
+executable 2023-19
+  import:  day, extensions
+  main-is: 2023/19.hs
+
+executable 2023-20
+  import:  day, extensions
+  main-is: 2023/20.hs
+
+executable 2023-21
+  import:  day, extensions
+  main-is: 2023/21.hs
+
+executable 2023-22
+  import:  day, extensions
+  main-is: 2023/22.hs
+
+executable 2023-23
+  import:  day, extensions
+  main-is: 2023/23.hs
+
+executable 2023-24
+  import:  day, extensions
+  main-is: 2023/24.hs
+
+executable 2023-25
+  import:  day, extensions
+  main-is: 2023/25.hs
+
 executable 2024-01
   import:  day, extensions
   main-is: 2024/01.hs
@@ -176,7 +277,10 @@ executable 2025-09
   main-is: 2025/09.hs
 
 executable 2025-10
-  import:  day, extensions
-  build-depends: parallel, process
-  main-is: 2025/10.hs
-  ghc-options: -O2 -threaded +RTS -N
+  import:        day, extensions
+  build-depends:
+    , MIP == 0.2.0.0
+    , scientific
+
+  main-is:       2025/10.hs
+  ghc-options:   -O2 -threaded +RTS -N
