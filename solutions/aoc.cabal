@@ -283,4 +283,8 @@ executable 2025-10
     , scientific
 
   main-is:       2025/10.hs
-  ghc-options:   -O2 -threaded +RTS -N
+
+executable 2025-11
+  import: day, extensions
+  main-is: 2025/11.hs
+  build-depends: time
