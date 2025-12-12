@@ -87,6 +87,7 @@ data Format
     | Newline
     | Symbol
     | String
+    | Try !Format
     | Optional !Format
     | At !String
     | Literal !String
@@ -275,6 +276,7 @@ toType = \case
     Char -> [t|Char|]
     Literal _ -> [t|()|]
     Discard _ -> [t|()|]
+    Try f -> toType f
     Optional format
         | interesting format -> [t|Maybe $(toType format)|]
         | otherwise -> [t|()|]
@@ -323,6 +325,7 @@ toParser = \case
     Digit -> [|digitToInt <$> digit <?> "digit"|]
     Char -> [|letter <?> "<single letter>"|]
     Discard format -> [|$(toParser format) $> ()|]
+    Try format -> [|try $(toParser format)|]
     Optional format
         | interesting format -> [|option Nothing (Just <$> $(toParser format))|]
         | otherwise -> [|optional $(toParser format)|]
@@ -383,6 +386,7 @@ interesting = \case
     String -> True
     Gather _ -> True
     Discard _ -> False
+    Try format -> interesting format
     Optional format -> interesting format
     Group format -> interesting format
     Many format -> interesting format
@@ -667,7 +671,8 @@ chars = noneOf "%()\\*+&|@!?[]"
 table :: Table Format
 table =
     [
-        [ Prefix $ foldr1 (>>>) <$> many1 (char '~' $> Discard)
+        [
+            Prefix $ foldr1 (>>>) <$> many1 (choice [char '~' $> Discard, char '$' $> Try])
         ]
     ,
         [ Postfix $

@@ -164,6 +164,11 @@ coordArray :: (IArray a e) => [[e]] -> a Coord e
 coordArray [] = error "coordMatrix: empty list"
 coordArray xs@(x : _) = array (C 0 0, C (length xs - 1) (length x - 1)) $ coordLines xs
 
+-- | Precondition: Non-empty
+coordMap :: [[e]] -> Map Coord e
+coordMap [] = error "coordMatrix: empty list"
+coordMap xs = fromList (coordLines xs)
+
 {- | Given a list of lines pair up each character with
 its position.
 -}

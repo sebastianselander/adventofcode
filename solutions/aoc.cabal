@@ -194,4 +194,7 @@ executable 2025-10
 executable 2025-11
   import: day, extensions
   main-is: 2025/11.hs
-  build-depends: time
+
+executable 2025-12
+  import: day, extensions
+  main-is: 2025/12.hs
