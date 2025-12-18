@@ -356,22 +356,21 @@ toParser = \case
       where
         le = toParser l
         re = toParser r
-    -- TODO: Figure out how we can remove `try`
     format@(Follows _ _) -> do
         let fmts = [(interesting x, toParser x) | x <- flatten format []]
-            n = foldr (\(x, _) acc -> if x then acc + 1 else acc) 0 fmts
+            n = foldl' (\acc (x, _) -> if x then acc + 1 else acc) 0 fmts
             tup = conE (tupleDataName n)
         case fmts of
             [] -> [|return ()|]
             ((ii, e) : es)
-                | n == 0 -> foldl ap0 e es
-                | n == 1 -> foldl ap1 e es
-                | ii -> foldl apN [|$tup <$> $e|] es
-                | otherwise -> foldl apN [|$tup <$ $e|] es
+                | n == 0 -> foldl' ap0 e es
+                | n == 1 -> foldl' ap1 e es
+                | ii -> foldl' apN [|$tup <$> $e|] es
+                | otherwise -> foldl' apN [|$tup <$ $e|] es
       where
-        ap0 l (_, r) = [|try $l *> $r|]
-        ap1 l (i, r) = if i then [|try $l *> $r|] else [|try $l <* $r|]
-        apN l (i, r) = if i then [|try $l <*> $r|] else [|try $l <* $r|]
+        ap0 l (_, r) = [|$l *> $r|]
+        ap1 l (i, r) = if i then [|$l *> $r|] else [|$l <* $r|]
+        apN l (i, r) = if i then [|$l <*> $r|] else [|$l <* $r|]
 
 interesting :: Format -> Bool
 interesting = \case
